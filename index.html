@@ -14,13 +14,15 @@
         .sticky-top { top: 0; z-index: 1020; }
         th { background-color: #0d6efd !important; color: white; font-weight: 600; white-space: nowrap; font-size: 0.85rem; padding: 10px; }
         td { white-space: nowrap; font-size: 0.85rem; }
+        /* Alineación clara para los nombres en la tabla */
+        td.text-nombre { text-align: left !important; font-weight: 500; }
     </style>
 </head>
 <body>
 
 <div class="container-fluid px-4 my-4">
     <h2 class="text-center mb-1 fw-bold text-primary">Buscador Especializado - Carpeta SEGCRED</h2>
-    <p class="text-center text-muted mb-4">Padrones de Atención Integral del Niño Menor de 5 Años</p>
+    <p class="text-center text-muted mb-4">Padrones de Atención Integral del Niño Menor de 5 Años (Consolidado)</p>
 
     <div class="card mb-4">
         <div id="statusHeader" class="card-header bg-secondary text-white d-flex justify-content-between align-items-center fw-semibold">
@@ -70,8 +72,7 @@
             <div class="table-responsive">
                 <table class="table table-striped table-hover mb-0 align-middle text-center" id="tablaResultados">
                     <thead class="sticky-top">
-                        <tr id="thHeaders">
-                            </tr>
+                        <tr id="thHeaders"></tr>
                     </thead>
                     <tbody id="tbBody">
                         <tr>
@@ -86,11 +87,11 @@
 
 <script>
     // =================================================================
-    // CONFIGURACIÓN AJUSTADA A TU REPOSITORIO REAL
+    // CONFIGURACIÓN REPOSITORIO
     // =================================================================
     const USUARIO = "DesarrolloInfantilTemprano-DIT"; 
     const REPOSITORIO = "AtencionesSIHCE";           
-    const CARPETA = "SEGCRED";                       
+    const CARPETA = "SEGCRED";                        
     // =================================================================
 
     let listaRegistros = [];
@@ -108,24 +109,26 @@
 
         try {
             const respuesta = await fetch(urlApi);
-            if (!respuesta.ok) throw new Error("Acceso denegado. Revisa si la ruta de la carpeta o el repositorio tienen las mayúsculas idénticas.");
+            if (!respuesta.ok) throw new Error("Acceso denegado. Revisa la ruta de la carpeta o el repositorio.");
             
             const archivos = await respuesta.json();
-            // Filtra archivos excluyendo el marcador temporal nota.txt
             const archivosValidos = archivos.filter(file => file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv'));
 
             if (archivosValidos.length === 0) {
                 statusMsg.className = "fw-bold text-warning";
-                statusMsg.innerText = `Carpeta '${CARPETA}' lista en la nube. Esperando que subas los reportes Excel para unificar...`;
+                statusMsg.innerText = `Carpeta '${CARPETA}' lista en la nube. Esperando archivos Excel...`;
                 spinner.classList.add('d-none');
                 document.getElementById('tbBody').innerHTML = `<tr><td colspan="100%" class="text-center p-4 text-muted">Sube los archivos Excel dentro de la carpeta '${CARPETA}' en GitHub para activar las búsquedas.</td></tr>`;
                 return;
             }
 
             statusMsg.innerText = `Sincronizando ${archivosValidos.length} archivo(s) de la carpeta '${CARPETA}'...`;
+            listaArchivosDiv.innerHTML = '';
             
+            let mapaConsolidado = {};
+
             for (let archivo of archivosValidos) {
-                listaArchivosDiv.innerHTML += `• Analizando estructura de matriz: <code>${archivo.name}</code><br>`;
+                listaArchivosDiv.innerHTML += `• Unificando matriz nominal: <code>${archivo.name}</code><br>`;
                 
                 const resExcel = await fetch(archivo.download_url);
                 const arrayBuffer = await resExcel.arrayBuffer();
@@ -134,20 +137,62 @@
                 const primeraHoja = workbook.SheetNames[0];
                 const hoja = workbook.Sheets[primeraHoja];
 
-                // Saltamos las 8 líneas superiores del reporte de atención integral CRED
-                let json = XLSX.utils.sheet_to_json(hoja, { defval: "", range: 8, raw: false });
+                // Saltamos las 8 líneas superiores de metadatos/títulos institucionales
+                let jsonRaw = XLSX.utils.sheet_to_json(hoja, { defval: "", range: 8, raw: false });
 
-                if (json.length > 0) {
-                    if (columnasExcel.length === 0) {
-                        columnasExcel = Object.keys(json[0]);
-                        generarEncabezadosTabla(columnasExcel);
+                // Procesamiento fila por fila para limpiar columnas y agrupar por DNI
+                jsonRaw.forEach(row => {
+                    let filaLimpia = {};
+                    
+                    Object.keys(row).forEach(key => {
+                        let nuevaClave = key;
+                        
+                        // Mapeo adaptado para resolver las celdas combinadas (__EMPTY) de tu captura
+                        if (key === "__EMPTY_48") nuevaClave = "CRED - 2m";
+                        if (key === "__EMPTY_49") nuevaClave = "CRED - 4m";
+                        if (key === "__EMPTY_50") nuevaClave = "CRED - 6m";
+                        if (key === "__EMPTY_51") nuevaClave = "CRED - 9m";
+                        if (key === "__EMPTY_52") nuevaClave = "CRED - 11m";
+                        if (key === "__EMPTY_53") nuevaClave = "Micronutrientes - Dosis 2";
+                        if (key === "__EMPTY_54") nuevaClave = "Micronutrientes - Dosis 3";
+                        if (key === "__EMPTY_55") nuevaClave = "Micronutrientes - Dosis 4";
+                        if (key === "__EMPTY_56") nuevaClave = "Micronutrientes - Dosis 5";
+                        if (key === "__EMPTY_57") nuevaClave = "Suplementación Adicional";
+
+                        filaLimpia[nuevaClave] = row[key];
+                    });
+
+                    // Identificar la clave única de identificación (DNI o Documento)
+                    const idUnico = buscarValorDirecto(filaLimpia, ['dni', 'documento', 'id']);
+                    
+                    if (idUnico) {
+                        const dniString = String(idUnico).trim();
+                        
+                        if (!mapaConsolidado[dniString]) {
+                            // Si el niño no existe en el mapa, lo agregamos con sus datos iniciales
+                            mapaConsolidado[dniString] = filaLimpia;
+                        } else {
+                            // Si ya existe, combinamos las celdas vacías con nueva información encontrada
+                            Object.keys(filaLimpia).forEach(col => {
+                                if (filaLimpia[col] && (!mapaConsolidado[dniString][col] || mapaConsolidado[dniString][col] === "")) {
+                                    mapaConsolidado[dniString][col] = filaLimpia[col];
+                                }
+                            });
+                        }
                     }
-                    listaRegistros = listaRegistros.concat(json);
-                }
+                });
+            }
+
+            // Convertimos el mapa estructurado de vuelta a una lista indexable
+            listaRegistros = Object.values(mapaConsolidado);
+
+            if (listaRegistros.length > 0) {
+                columnasExcel = Object.keys(listaRegistros[0]);
+                generarEncabezadosTabla(columnasExcel);
             }
 
             statusMsg.className = "fw-bold text-success";
-            statusMsg.innerText = `¡Éxito! Base de datos unificada con ${listaRegistros.length} niños cargados desde '${CARPETA}'.`;
+            statusMsg.innerText = `¡Éxito! Base de datos consolidada de forma única con ${listaRegistros.length} niños desde '${CARPETA}'.`;
             document.getElementById('btnBuscar').removeAttribute('disabled');
             document.getElementById('tbBody').innerHTML = `<tr><td colspan="100%" class="text-center p-4 text-muted">El sistema está listo. Realice una búsqueda nominal o por DNI.</td></tr>`;
 
@@ -159,7 +204,6 @@
         }
     }
 
-    // El resto de la lógica analítica de renderizado se mantiene intacta
     function generarEncabezadosTabla(columnas) {
         const thHeaders = document.getElementById('thHeaders');
         thHeaders.innerHTML = '';
@@ -186,9 +230,9 @@
         }
 
         const resultados = listaRegistros.filter(row => {
-            const campoDni = buscarValor(row, ['dni', 'documento', 'id']);
-            const campoNombre = buscarValor(row, ['apellidos', 'nombre', 'paciente']);
-            const campoFecha = buscarValor(row, ['nac', 'fecha', 'nacimiento']);
+            const campoDni = buscarValorDirecto(row, ['dni', 'documento', 'id']);
+            const campoNombre = buscarValorDirecto(row, ['apellidos', 'nombre', 'paciente', 'niño']);
+            const campoFecha = buscarValorDirecto(row, ['nac', 'fecha', 'nacimiento']);
 
             if (txtDni && !String(campoDni).toLowerCase().includes(txtDni)) return false;
             if (txtNombre && !String(campoNombre).toLowerCase().includes(txtNombre)) return false;
@@ -217,7 +261,8 @@
         mostrarResultados(resultados);
     }
 
-    function buscarValor(objeto, claves) {
+    // Busca coincidencias de claves dentro de una fila procesada
+    function buscarValorDirecto(objeto, claves) {
         for (let key in objeto) {
             if (claves.some(cl => key.toLowerCase().includes(cl))) return objeto[key];
         }
@@ -236,13 +281,19 @@
 
         datos.forEach(row => {
             const tr = document.createElement('tr');
-            columnasExcel.forEach(col => {
+            columnasExcel.forEach((col, index) => {
                 const td = document.createElement('td');
-                let valor = row[col];
+                let valor = row[col] !== undefined && row[col] !== null ? row[col] : '';
                 
                 if (valor instanceof Date) {
                     valor = valor.toLocaleDateString('es-ES', { timeZone: 'UTC' });
                 }
+                
+                // Aplicar estilo de alineación a la columna de Nombres (usualmente la segunda columna, índice 1)
+                if (index === 1) {
+                    td.className = "text-nombre";
+                }
+
                 td.innerText = valor;
                 tr.appendChild(td);
             });
@@ -256,6 +307,7 @@
         document.getElementById('dateDesde').value = '';
         document.getElementById('dateHasta').value = '';
         mostrarResultados([]);
+        document.getElementById('tbBody').innerHTML = `<tr><td colspan="100%" class="text-center p-4 text-muted">El sistema está listo. Realice una búsqueda nominal o por DNI.</td></tr>`;
     }
 </script>
 
