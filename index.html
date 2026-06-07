@@ -47,8 +47,8 @@
 
     <div class="w-full max-w-5xl bg-white rounded-2xl shadow-xl shadow-amber-100/50 p-6 mb-5 no-print border border-amber-100">
         <div class="text-center mb-5">
-            <h1 class="text-3xl font-black text-blue-600 tracking-tight flex items-center justify-center gap-2">
-                👶🏽 Sistema CRED <span class="text-emerald-500 text-xl font-medium">Consulta Nominal</span>
+            <h1 class="text-3xl font-black text-blue-600 tracking-tight flex items-center justify-center gap-3">
+                <span class="text-4xl">👶🏽👧🏻</span> Sistema CRED <span class="text-emerald-500 text-xl font-medium">Consulta Nominal</span>
             </h1>
             <p class="text-xs text-slate-400 mt-1">Busca de forma segura el historial de controles y vacunas por DNI</p>
         </div>
@@ -59,13 +59,13 @@
                    maxlength="15">
             <button id="btnBuscar" onclick="buscarPorDNI()" 
                     class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-8 py-3 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer transform active:scale-95 flex items-center justify-center gap-2">
-                <span>Buscar Niño</span>
+                <span>Buscar Niño/a</span>
             </button>
         </div>
 
         <div id="statusMessage" class="hidden text-center mt-5 text-slate-500 flex items-center justify-center gap-2">
             <div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-100 h-5 w-5"></div>
-            <span id="statusText" class="text-sm font-semibold text-rose-500">Leyendo bases de datos...</span>
+            <span id="statusText" class="text-sm font-semibold text-rose-500">Analizando base de datos...</span>
         </div>
     </div>
 
@@ -73,8 +73,8 @@
         
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-4 border-dotted border-slate-100 pb-5 mb-6 gap-3">
             <div>
-                <h2 class="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-                    <span class="text-3xl">🧸</span> LIBRETA DE CONTROL DIGITAL
+                <h2 class="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-3">
+                    <span class="text-3xl">🧸🎒</span> LIBRETA DE CONTROL DIGITAL
                 </h2>
                 <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Estrategia Sanitaria de Desarrollo Infantil Temprano (CRED)</p>
             </div>
@@ -87,11 +87,11 @@
         
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 bg-gradient-to-br from-blue-50/60 to-emerald-50/40 p-5 rounded-2xl border border-blue-100/50">
             <div>
-                <span class="text-[10px] font-black text-blue-400 block uppercase tracking-wider">Nombre del Niño</span> 
+                <span class="text-[10px] font-black text-blue-400 block uppercase tracking-wider">Nombre Completo</span> 
                 <p id="resNombre" class="text-base font-black text-slate-800 truncate">-</p>
             </div>
             <div>
-                <span class="text-[10px] font-black text-emerald-400 block uppercase tracking-wider">Documento Identidad (DNI)</span> 
+                <span class="text-[10px] font-black text-emerald-400 block uppercase tracking-wider">DNI</span> 
                 <p id="resDNI" class="text-base font-mono font-black text-slate-800">-</p>
             </div>
             <div>
@@ -99,7 +99,7 @@
                 <p id="resFechaNac" class="text-base font-medium text-slate-800">-</p>
             </div>
             <div>
-                <span class="text-[10px] font-black text-rose-400 block uppercase tracking-wider">Edad Cronológica</span> 
+                <span class="text-[10px] font-black text-rose-400 block uppercase tracking-wider">Edad Actual</span> 
                 <p id="resEdad" class="text-base font-black text-blue-600">-</p>
             </div>
         </div>
@@ -130,7 +130,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
             <div>
                 <h3 class="text-xs font-black text-amber-600 bg-amber-50/50 border border-amber-100/60 px-3 py-2 rounded-xl mb-3 flex items-center gap-2">
-                    <span>🍼</span> SUPLEMENTACIÓN CON HIERRO
+                    <span>🧴</span> SUPLEMENTACIÓN CON HIERRO
                 </h3>
                 <div class="overflow-x-auto border border-slate-100 rounded-2xl">
                     <table class="min-w-full bg-white text-[11px]">
@@ -165,11 +165,11 @@
 
         <div>
             <h3 class="text-xs font-black text-emerald-600 bg-emerald-50/50 border border-emerald-100/60 px-3 py-2 rounded-xl mb-3 flex items-center gap-2">
-                <span>💉</span> ESQUEMA NATIVO DE VACUNACIÓN POR GRUPOS DE EDAD
+                <span>💉</span> ESQUEMA DE VACUNACIÓN POR GRUPOS DE EDAD
             </h3>
             <div class="overflow-x-auto border border-slate-100 rounded-2xl">
                 <table class="min-w-full bg-white text-[11px]">
-                    <thead class="bg-slate-50 text-slate-500 uppercase font-black text-center border-b border-slate-100">
+                    <thead class="bg-slate-50 text-slate-600 uppercase font-black text-center border-b border-slate-100">
                         <tr>
                             <th class="px-3 py-2.5 border-r border-slate-100 text-left w-24">Grupo Edad</th>
                             <th class="px-3 py-2.5 border-r border-slate-100 text-left">Vacuna / Biológico</th>
@@ -195,7 +195,7 @@
         const GITHUB_REPO = "LibretaBoys";
         const CARPETA_EXCELS = "ExcelBoys"; 
 
-        // CONFIGURACIÓN DE CRITERIOS CRED (Marcar campos deshabilitados con "GRIS")
+        // CONFIGURACIÓN DE CRITERIOS CRED
         const MAPEO_CRED = [
             { etapa: "RECIEN NACIDO", n1: "G", n2: "H", n3: "I", n4: "GRIS", n5: "GRIS", n6: "GRIS", n7: "GRIS" },
             { etapa: "MENOR DE UN AÑO", n1: "K", n2: "L", n3: "Q", n4: "R", n5: "AA", n6: "AE", n7: "AI" },
@@ -216,23 +216,19 @@
             { edad: "11 MESES", col: "AO" }
         ];
 
-        // CONFIGURACIÓN DE HEMOGLOBINA (Celdas sin correspondencia van como "GRIS")
+        // CONFIGURACIÓN DE HEMOGLOBINA (Corrección de lista y 1a 3m Habilitado)
         const MAPEO_HB = [
             { edad: "6 MESES", col: "AB" },
-            { edad: "7 MESES", col: "GRIS" },
-            { edad: "8 MESES", col: "GRIS" },
             { edad: "9 MESES", col: "AK" },
-            { edad: "10 MESES", col: "GRIS" },
-            { edad: "11 MESES", col: "GRIS" },
             { edad: "1 AÑO", col: "AQ" },
-            { edad: "1 AÑO Y 3 MESES", col: "GRIS" },
+            { edad: "1 AÑO Y 3 MESES", col: "GRIS_SOLO_AQUÍ_SE_DEBE_MODIFICAR" }, // CAMBIAR ESTA COLUMNA SEGÚN TU EXCEL
             { edad: "1 AÑO Y 6 MESES", col: "AZ" },
             { edad: "2 AÑOS", col: "BG" },
             { edad: "3 AÑOS", col: "BL" },
             { edad: "4 AÑOS", col: "BQ" }
         ];
 
-        // CONFIGURACIÓN DE VACUNACIÓN CON SUS EXTENSIONES DE CAMPOS OSCUROS
+        // CONFIGURACIÓN DE VACUNACIÓN
         const ESQUEMA_VACUNAS_GRUPOS = [
             { grupo: "MENOR DE 1 AÑO", nombre: "PENTAVALENTE", unica: "GRIS", d1: "M", d2: "T", d3: "AC" },
             { grupo: "MENOR DE 1 AÑO", nombre: "IPV", unica: "GRIS", d1: "N", d2: "U", d3: "AD" },
@@ -275,10 +271,13 @@
             return valor;
         }
 
-        // Retorna celda regular o celda negra deshabilitada
         function obtenerHTMLCelda(llaveMapeo, filaObjeto) {
             if (llaveMapeo === "GRIS" || !llaveMapeo) {
                 return `<td class="bg-slate-800 border-r border-slate-100"></td>`;
+            }
+            // MODIFICACIÓN: Si la llave mapea a '1 AÑO Y 3 MESES', se debe habilitar y no mostrar gris
+            if (llaveMapeo === "1 AÑO Y 3 MESES") {
+                return `<td class="px-1 py-2 border-r border-slate-100 bg-white font-black text-slate-800">${formatearValorCelda(filaObjeto[llaveMapeo])}</td>`;
             }
             return `<td class="px-1 py-2 border-r border-slate-100 bg-white">${formatearValorCelda(filaObjeto[llaveMapeo])}</td>`;
         }
@@ -342,7 +341,7 @@
             document.getElementById('resFechaNac').innerText = formatearValorCelda(fila['E']);
             document.getElementById('resEdad').innerText = calcularEdadExacta(fila['E']);
 
-            // 1. Renderizar CRED con Bloques Negros
+            // 1. Renderizar CRED
             const credBody = document.getElementById('credTableBody');
             credBody.innerHTML = '';
             MAPEO_CRED.forEach(m => {
@@ -379,26 +378,27 @@
                 hierroBody.appendChild(tr);
             });
 
-            // 3. Renderizar Hemoglobina con Campos Oscuros Corregidos
+            // 3. Renderizar Hemoglobina con Controles Habilitados Correctamente
             const hbBody = document.getElementById('hbTableBody');
             hbBody.innerHTML = '';
             MAPEO_HB.forEach(m => {
                 const tr = document.createElement('tr');
+                // MODIFICACIÓN: Si mapea a '1 AÑO Y 3 MESES', se renderiza normal, no gris
                 if (m.col === "GRIS") {
                     tr.innerHTML = `
-                        <td class="px-3 py-2 font-bold bg-slate-50 border-r border-slate-100 text-slate-700">${m.edad}</td>
+                        <td class="px-3 py-2 font-bold bg-slate-50 border-r border-slate-200 text-slate-700">${m.edad}</td>
                         <td class="bg-slate-800"></td>
                     `;
                 } else {
                     tr.innerHTML = `
-                        <td class="px-3 py-2 font-bold bg-slate-50 border-r border-slate-100 text-slate-700">${m.edad}</td>
+                        <td class="px-3 py-2 font-bold bg-slate-50 border-r border-slate-200 text-slate-700">${m.edad}</td>
                         <td class="px-3 py-2 text-center bg-white font-black text-slate-800">${formatearValorCelda(fila[m.col])}</td>
                     `;
                 }
                 hbBody.appendChild(tr);
             });
 
-            // 4. Renderizar Vacunas con Bloques Negros
+            // 4. Renderizar Vacunas
             const vacunasBody = document.getElementById('vacunasTableBody');
             vacunasBody.innerHTML = '';
             
@@ -416,7 +416,7 @@
 
                 tr.innerHTML = `
                     ${celdaGrupo}
-                    <td class="px-3 py-2 text-left bg-slate-50 font-bold border-r border-slate-100 text-slate-700">${v.nombre}</td>
+                    <td class="px-3 py-2 text-left bg-slate-50 font-bold border-r border-slate-200 text-slate-700">${v.nombre}</td>
                     ${obtenerHTMLCelda(v.unica, fila)}
                     ${obtenerHTMLCelda(v.d1, fila)}
                     ${obtenerHTMLCelda(v.d2, fila)}
