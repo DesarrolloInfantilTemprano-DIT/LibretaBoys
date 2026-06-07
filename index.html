@@ -9,20 +9,20 @@
     <style>
         body { background-color: #f4f6f9; font-size: 0.9rem; }
         .card { box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: none; border-radius: 10px; }
-        .table-responsive { max-height: 520px; overflow-y: auto; }
+        .table-responsive { max-height: 550px; overflow-y: auto; }
         .spinner-border { width: 1.3rem; height: 1.3rem; }
         .sticky-top { top: 0; z-index: 1020; }
-        th { background-color: #0d6efd !important; color: white; font-weight: 600; white-space: nowrap; font-size: 0.85rem; padding: 10px; }
-        td { white-space: nowrap; font-size: 0.85rem; }
-        /* Alineación clara para los nombres en la tabla */
-        td.text-nombre { text-align: left !important; font-weight: 500; }
+        th { background-color: #0d6efd !important; color: white; font-weight: 600; white-space: nowrap; font-size: 0.82rem; padding: 10px; text-transform: uppercase; }
+        td { white-space: nowrap; font-size: 0.82rem; padding: 6px 10px !important; }
+        .text-nombre { text-align: left !important; font-weight: 500; color: #1e293b; }
+        tr:nth-child(even) { background-color: #f8fafc; }
     </style>
 </head>
 <body>
 
 <div class="container-fluid px-4 my-4">
     <h2 class="text-center mb-1 fw-bold text-primary">Buscador Especializado - Carpeta SEGCRED</h2>
-    <p class="text-center text-muted mb-4">Padrones de Atención Integral del Niño Menor de 5 Años (Consolidado)</p>
+    <p class="text-center text-muted mb-4">Padrones de Atención Integral del Niño Menor de 5 Años (Consolidado Ampliado A - FO)</p>
 
     <div class="card mb-4">
         <div id="statusHeader" class="card-header bg-secondary text-white d-flex justify-content-between align-items-center fw-semibold">
@@ -65,18 +65,18 @@
 
     <div class="card">
         <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
-            <h5 class="mb-0 fw-bold text-dark">Registros e Indicadores Encontrados</h5>
-            <span id="totalRegistros" class="badge bg-success fs-6 px-3">0 registros</span>
+            <h5 class="mb-0 fw-bold text-dark">Registros de Seguimiento del Menor (Columnas A - FO)</h5>
+            <span id="totalRegistros" class="badge bg-success fs-6 px-3">0 niños</span>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-striped table-hover mb-0 align-middle text-center" id="tablaResultados">
+                <table class="table table-bordered table-hover mb-0 align-middle text-center" id="tablaResultados">
                     <thead class="sticky-top">
                         <tr id="thHeaders"></tr>
                     </thead>
                     <tbody id="tbBody">
                         <tr>
-                            <td colspan="100%" class="text-center p-5 text-muted">Cargando repositorios... Por favor espere.</td>
+                            <td colspan="100%" class="text-center p-5 text-muted">Cargando base de datos nominal... Por favor espere.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -87,7 +87,7 @@
 
 <script>
     // =================================================================
-    // CONFIGURACIÓN REPOSITORIO
+    // CONFIGURACIÓN REPOSITORIO GITHUB
     // =================================================================
     const USUARIO = "DesarrolloInfantilTemprano-DIT"; 
     const REPOSITORIO = "AtencionesSIHCE";           
@@ -109,96 +109,135 @@
 
         try {
             const respuesta = await fetch(urlApi);
-            if (!respuesta.ok) throw new Error("Acceso denegado. Revisa la ruta de la carpeta o el repositorio.");
+            if (!respuesta.ok) throw new Error("Acceso denegado al repositorio de GitHub.");
             
             const archivos = await respuesta.json();
             const archivosValidos = archivos.filter(file => file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv'));
 
             if (archivosValidos.length === 0) {
                 statusMsg.className = "fw-bold text-warning";
-                statusMsg.innerText = `Carpeta '${CARPETA}' lista en la nube. Esperando archivos Excel...`;
+                statusMsg.innerText = `No se encontraron archivos en la carpeta '${CARPETA}'.`;
                 spinner.classList.add('d-none');
-                document.getElementById('tbBody').innerHTML = `<tr><td colspan="100%" class="text-center p-4 text-muted">Sube los archivos Excel dentro de la carpeta '${CARPETA}' en GitHub para activar las búsquedas.</td></tr>`;
                 return;
             }
 
-            statusMsg.innerText = `Sincronizando ${archivosValidos.length} archivo(s) de la carpeta '${CARPETA}'...`;
+            statusMsg.innerText = `Procesando matriz ampliada (${archivosValidos.length} archivo/s)...`;
             listaArchivosDiv.innerHTML = '';
             
             let mapaConsolidado = {};
 
             for (let archivo of archivosValidos) {
-                listaArchivosDiv.innerHTML += `• Unificando matriz nominal: <code>${archivo.name}</code><br>`;
+                listaArchivosDiv.innerHTML += `• Analizando estructura estructural A-FO: <code>${archivo.name}</code><br>`;
                 
                 const resExcel = await fetch(archivo.download_url);
                 const arrayBuffer = await resExcel.arrayBuffer();
                 
-                const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array', cellDates: true, cellNF: false, cellText: true });
+                // Leemos de forma nativa manteniendo el formato del libro
+                const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array', cellDates: true });
                 const primeraHoja = workbook.SheetNames[0];
                 const hoja = workbook.Sheets[primeraHoja];
 
-                // Saltamos las 8 líneas superiores de metadatos/títulos institucionales
-                let jsonRaw = XLSX.utils.sheet_to_json(hoja, { defval: "", range: 8, raw: false });
+                // Convertimos a Matriz bidimensional (Array of Arrays) para controlar las filas manualmente
+                let filasMatriz = XLSX.utils.sheet_to_json(hoja, { header: 1, defval: "" });
 
-                // Procesamiento fila por fila para limpiar columnas y agrupar por DNI
-                jsonRaw.forEach(row => {
+                // La fila 7 (índice 7) y fila 8 contienen los nombres base de las columnas en los padrones de salud
+                let filaCabeceraPrincipal = filasMatriz[7] || [];
+                let filaCabeceraSecundaria = filasMatriz[6] || []; 
+
+                // Creamos un mapeo de nombres reales basados en la posición física de la columna (De la A a la FO)
+                let nombresColumnasFinales = [];
+                let longitudMaxima = Math.max(filaCabeceraPrincipal.length, 171); // Forzar lectura hasta rango FO (~170 columnas)
+
+                for (let i = 0; i < longitudMaxima; i++) {
+                    let nombreBase = String(filaCabeceraPrincipal[i] || "").trim();
+                    let grupoArriba = String(filaCabeceraSecundaria[i] || "").trim();
+
+                    // Si la celda está vacía o es un __EMPTY automático, le asignamos su función epidemiológica real por posición
+                    if (!nombreBase || nombreBase.startsWith("__EMPTY")) {
+                        if (i === 0) nombreBase = "N°";
+                        else if (i === 1) nombreBase = "Apellidos y Nombres";
+                        else if (i === 2) nombreBase = "Dirección";
+                        else if (i === 3) nombreBase = "Distrito";
+                        else if (i === 4) nombreBase = "DNI / Documento";
+                        else if (i === 5) nombreBase = "Fecha Nacimiento";
+                        else if (i === 6) nombreBase = "Edad Actual";
+                        else if (i === 7) nombreBase = "Sexo";
+                        else if (i === 8) nombreBase = "Financiamiento";
+                        else if (i === 9) nombreBase = "Peso (gr)";
+                        else if (i === 10) nombreBase = "Talla (cm)";
+                        else if (i === 11) nombreBase = "Hemoglobina";
+                        // Reconstrucción del bloque CRED según las columnas correlativas del Excel institucional
+                        else if (i >= 12 && i <= 23) nombreBase = `CRED - ${i - 11}° Mes`;
+                        else if (i >= 24 && i <= 35) nombreBase = `CRED - Control ${i - 23}`;
+                        else if (i >= 48 && i <= 52) {
+                            const mesesCRED = ["2m", "4m", "6m", "9m", "11m"];
+                            nombreBase = `CRED Oportuno - ${mesesCRED[i - 48]}`;
+                        }
+                        else if (i >= 53 && i <= 56) nombreBase = `Micronutrientes - Dosis ${i - 51}`;
+                        else if (i === 57) nombreBase = `Suplementación Adicional`;
+                        else {
+                            // Para cualquier otra columna del rango FO, usamos la combinación de la jerarquía superior o su índice
+                            nombreBase = grupoArriba ? `${grupoArriba} (Ref_${i})` : `Indicador_Col_${i}`;
+                        }
+                    }
+                    nombresColumnasFinales.push(nombreBase);
+                }
+
+                // Procesamos los registros reales de niños (desde la fila 8 en adelante)
+                for (let f = 8; f < filasMatriz.length; f++) {
+                    let filaActual = filasMatriz[f];
+                    if (!filaActual || filaActual.length === 0) continue;
+
                     let filaLimpia = {};
-                    
-                    Object.keys(row).forEach(key => {
-                        let nuevaClave = key;
-                        
-                        // Mapeo adaptado para resolver las celdas combinadas (__EMPTY) de tu captura
-                        if (key === "__EMPTY_48") nuevaClave = "CRED - 2m";
-                        if (key === "__EMPTY_49") nuevaClave = "CRED - 4m";
-                        if (key === "__EMPTY_50") nuevaClave = "CRED - 6m";
-                        if (key === "__EMPTY_51") nuevaClave = "CRED - 9m";
-                        if (key === "__EMPTY_52") nuevaClave = "CRED - 11m";
-                        if (key === "__EMPTY_53") nuevaClave = "Micronutrientes - Dosis 2";
-                        if (key === "__EMPTY_54") nuevaClave = "Micronutrientes - Dosis 3";
-                        if (key === "__EMPTY_55") nuevaClave = "Micronutrientes - Dosis 4";
-                        if (key === "__EMPTY_56") nuevaClave = "Micronutrientes - Dosis 5";
-                        if (key === "__EMPTY_57") nuevaClave = "Suplementación Adicional";
+                    let tieneDatos = false;
 
-                        filaLimpia[nuevaClave] = row[key];
+                    nombresColumnasFinales.forEach((colNombre, index) => {
+                        let celdaValor = filaActual[index];
+                        
+                        // Limpieza de saltos de línea molestos dentro del Excel (común en celdas de Hemoglobina)
+                        if (typeof celdaValor === 'string') {
+                            celdaValor = celdaValor.replace(/\n/g, " ").trim();
+                        }
+                        
+                        filaLimpia[colNombre] = celdaValor !== undefined && celdaValor !== null ? celdaValor : "";
+                        if (filaLimpia[colNombre] !== "") tieneDatos = true;
                     });
 
-                    // Identificar la clave única de identificación (DNI o Documento)
-                    const idUnico = buscarValorDirecto(filaLimpia, ['dni', 'documento', 'id']);
-                    
-                    if (idUnico) {
-                        const dniString = String(idUnico).trim();
-                        
-                        if (!mapaConsolidado[dniString]) {
-                            // Si el niño no existe en el mapa, lo agregamos con sus datos iniciales
-                            mapaConsolidado[dniString] = filaLimpia;
+                    // Identificamos al menor por su DNI (columna índice 4)
+                    let dniNiño = String(filaActual[4] || "").trim();
+
+                    if (dniNiño && tieneDatos) {
+                        if (!mapaConsolidado[dniNiño]) {
+                            mapaConsolidado[dniNiño] = filaLimpia;
                         } else {
-                            // Si ya existe, combinamos las celdas vacías con nueva información encontrada
+                            // Si el niño ya existe, consolidamos la información vacía con nuevas evaluaciones
                             Object.keys(filaLimpia).forEach(col => {
-                                if (filaLimpia[col] && (!mapaConsolidado[dniString][col] || mapaConsolidado[dniString][col] === "")) {
-                                    mapaConsolidado[dniString][col] = filaLimpia[col];
+                                if (filaLimpia[col] !== "" && (!mapaConsolidado[dniNiño][col] || mapaConsolidado[dniNiño][col] === "")) {
+                                    mapaConsolidado[dniNiño][col] = filaLimpia[col];
                                 }
                             });
                         }
                     }
-                });
+                }
             }
 
-            // Convertimos el mapa estructurado de vuelta a una lista indexable
             listaRegistros = Object.values(mapaConsolidado);
 
             if (listaRegistros.length > 0) {
+                // Guardamos la estructura exacta de cabeceras limpias ordenadas de A a FO
                 columnasExcel = Object.keys(listaRegistros[0]);
                 generarEncabezadosTabla(columnasExcel);
             }
 
             statusMsg.className = "fw-bold text-success";
-            statusMsg.innerText = `¡Éxito! Base de datos consolidada de forma única con ${listaRegistros.length} niños desde '${CARPETA}'.`;
+            statusMsg.innerText = `¡Éxito! Estructura sincronizada. ${listaRegistros.length} niños consolidados en el sistema.`;
             document.getElementById('btnBuscar').removeAttribute('disabled');
             document.getElementById('tbBody').innerHTML = `<tr><td colspan="100%" class="text-center p-4 text-muted">El sistema está listo. Realice una búsqueda nominal o por DNI.</td></tr>`;
 
         } catch (error) {
             statusMsg.className = "fw-bold text-danger";
-            statusMsg.innerText = "Error operativo: " + error.message;
+            statusMsg.innerText = "Error procesando el Padron CRED: " + error.message;
+            console.error(error);
         } finally {
             spinner.classList.add('d-none');
         }
@@ -230,16 +269,16 @@
         }
 
         const resultados = listaRegistros.filter(row => {
-            const campoDni = buscarValorDirecto(row, ['dni', 'documento', 'id']);
-            const campoNombre = buscarValorDirecto(row, ['apellidos', 'nombre', 'paciente', 'niño']);
-            const campoFecha = buscarValorDirecto(row, ['nac', 'fecha', 'nacimiento']);
+            // Buscador inteligente en los campos mapeados de filiación del menor
+            const campoDni = row["DNI / Documento"] || "";
+            const campoNombre = row["Apellidos y Nombres"] || "";
+            const campoFecha = row["Fecha Nacimiento"] || "";
 
             if (txtDni && !String(campoDni).toLowerCase().includes(txtDni)) return false;
             if (txtNombre && !String(campoNombre).toLowerCase().includes(txtNombre)) return false;
 
             if (fDesde || fHasta) {
                 if (!campoFecha) return false;
-                
                 let dateNum = new Date(campoFecha);
                 
                 if (isNaN(dateNum.getTime()) && String(campoFecha).includes('/')) {
@@ -248,7 +287,6 @@
                         dateNum = new Date(`${partes[2]}-${partes[1]}-${partes[0]}`);
                     }
                 }
-
                 if (isNaN(dateNum.getTime())) return false;
                 
                 const fechaFilaStr = dateNum.toISOString().split('T')[0];
@@ -261,27 +299,19 @@
         mostrarResultados(resultados);
     }
 
-    // Busca coincidencias de claves dentro de una fila procesada
-    function buscarValorDirecto(objeto, claves) {
-        for (let key in objeto) {
-            if (claves.some(cl => key.toLowerCase().includes(cl))) return objeto[key];
-        }
-        return '';
-    }
-
     function mostrarResultados(datos) {
         const tbody = document.getElementById('tbBody');
-        document.getElementById('totalRegistros').innerText = `${datos.length} registros`;
+        document.getElementById('totalRegistros').innerText = `${datos.length} niños`;
         tbody.innerHTML = '';
 
         if (datos.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="100%" class="text-center p-4 text-danger fw-bold">No se encontraron registros que coincidan con la búsqueda.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="100%" class="text-center p-4 text-danger fw-bold">No se encontraron niños registrados con esos criterios.</td></tr>`;
             return;
         }
 
         datos.forEach(row => {
             const tr = document.createElement('tr');
-            columnasExcel.forEach((col, index) => {
+            columnasExcel.forEach((col) => {
                 const td = document.createElement('td');
                 let valor = row[col] !== undefined && row[col] !== null ? row[col] : '';
                 
@@ -289,8 +319,7 @@
                     valor = valor.toLocaleDateString('es-ES', { timeZone: 'UTC' });
                 }
                 
-                // Aplicar estilo de alineación a la columna de Nombres (usualmente la segunda columna, índice 1)
-                if (index === 1) {
+                if (col === "Apellidos y Nombres") {
                     td.className = "text-nombre";
                 }
 
