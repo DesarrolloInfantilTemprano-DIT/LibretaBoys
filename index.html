@@ -6,7 +6,6 @@
     <title>Sistema CRED - Consulta Nominal</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         .loader {
             border-top-color: #2563eb;
@@ -16,10 +15,32 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* ESTILOS DE IMPRESIÓN AVANZADOS (Solución definitiva al guardado de PDF) */
         @media print {
-            .no-print { display: none !important; }
-            body { background-color: #ffffff; padding: 0; }
-            .print-container { box-shadow: none !important; border: none !important; margin: 0 !important; max-width: 100% !important; }
+            .no-print { 
+                display: none !important; 
+            }
+            body { 
+                background-color: #ffffff !important; 
+                padding: 0 !important; 
+                margin: 0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .print-container { 
+                box-shadow: none !important; 
+                border: none !important; 
+                margin: 0 !important; 
+                padding: 0 !important;
+                max-width: 100% !important; 
+                width: 100% !important;
+                display: block !important;
+            }
+            /* Previene el corte de tablas a mitad de una fila */
+            tr { 
+                page-break-inside: avoid; 
+            }
         }
     </style>
 </head>
@@ -54,7 +75,7 @@
             </div>
             <div class="flex items-center gap-2 no-print">
                 <button onclick="exportarAPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow transition-all duration-150 cursor-pointer flex items-center gap-1">
-                     Descargar Ficha PDF
+                     Descargar / Imprimir PDF
                 </button>
                 <span id="origenArchivo" class="text-xs bg-slate-100 text-slate-600 px-3 py-2 rounded-lg font-mono border border-slate-200"></span>
             </div>
@@ -158,14 +179,14 @@
         const GITHUB_REPO = "LibretaBoys";
         const CARPETA_EXCELS = "ExcelBoys"; 
 
-        // MAPEO DIRECTO POR LETRA DE COLUMNA DE EXCEL (Evita errores por cabeceras complejas o combinadas)
+        // MAPEO DIRECTO CON INDICADORES DE "CAMPOS OSCUROS" (Celdas deshabilitadas en gris)
         const MAPEO_CRED = [
-            { etapa: "RECIEN NACIDO", n1: "G", n2: "H", n3: "I", n4: "", n5: "", n6: "", n7: "" },
+            { etapa: "RECIEN NACIDO", n1: "G", n2: "H", n3: "I", n4: "GRIS", n5: "GRIS", n6: "GRIS", n7: "GRIS" },
             { etapa: "MENOR DE UN AÑO", n1: "K", n2: "L", n3: "Q", n4: "R", n5: "AA", n6: "AE", n7: "AI" },
-            { etapa: "UN AÑO", n1: "AP", n2: "AU", n3: "AX", n4: "AY", n5: "", n6: "", n7: "" },
-            { etapa: "DOS AÑOS", n1: "BF", n2: "BH", n3: "", n4: "", n5: "", n6: "", n7: "" },
-            { etapa: "TRES AÑOS", n1: "BK", n2: "BM", n3: "", n4: "", n5: "", n6: "", n7: "" },
-            { etapa: "CUATRO AÑOS", n1: "BP", n2: "BT", n3: "", n4: "", n5: "", n6: "", n7: "" }
+            { etapa: "UN AÑO", n1: "AP", n2: "AU", n3: "AX", n4: "AY", n5: "GRIS", n6: "GRIS", n7: "GRIS" },
+            { etapa: "DOS AÑOS", n1: "BF", n2: "BH", n3: "GRIS", n4: "GRIS", n5: "GRIS", n6: "GRIS", n7: "GRIS" },
+            { etapa: "TRES AÑOS", n1: "BK", n2: "BM", n3: "GRIS", n4: "GRIS", n5: "GRIS", n6: "GRIS", n7: "GRIS" },
+            { etapa: "CUATRO AÑOS", n1: "BP", n2: "BT", n3: "GRIS", n4: "GRIS", n5: "GRIS", n6: "GRIS", n7: "GRIS" }
         ];
 
         const MAPEO_HIERRO = [
@@ -188,10 +209,9 @@
             { edad: "4 AÑOS (Col. BQ)", col: "BQ" }
         ];
 
-        // ESTRUCTURA EXACTA POR GRUPOS CON SUS RESPECTIVAS COLUMNAS ASIGNADAS
         const ESQUEMA_VACUNAS_GRUPOS = [
             { grupo: "MENOR DE 1 AÑO", nombre: "PENTAVALENTE", unica: "", d1: "M", d2: "T", d3: "AC" },
-            { grupo: "MENOR DE 1 AÑO", nombre: "IPV", text: "", unica: "", d1: "N", d2: "U", d3: "AD" },
+            { grupo: "MENOR DE 1 AÑO", nombre: "IPV", unica: "", d1: "N", d2: "U", d3: "AD" },
             { grupo: "MENOR DE 1 AÑO", nombre: "ROVATIRUS", unica: "", d1: "O", d2: "V", d3: "" },
             { grupo: "MENOR DE 1 AÑO", nombre: "NEUMOCOCO", unica: "", d1: "P", d2: "W", d3: "" },
             
@@ -225,11 +245,18 @@
 
         function formatearValorCelda(valor) {
             if (!valor || valor === '-' || String(valor).trim() === '') return "-";
-            // Si es un número entero de 5 dígitos consecutivos, es muy probable que sea una fecha de Excel
             if (!isNaN(valor) && String(valor).trim().length === 5) {
                 return new Date((valor - 25569) * 86400 * 1000).toLocaleDateString('es-PE');
             }
             return valor;
+        }
+
+        // Función auxiliar para renderizar celdas normales o campos oscuros deshabilitados
+        function obtenerHTMLCeldaCred(llaveMapeo, filaObjeto) {
+            if (llaveMapeo === "GRIS") {
+                return `<td class="bg-slate-300 border-r border-slate-200"></td>`;
+            }
+            return `<td class="px-1 py-2 border-r border-slate-200">${formatearValorCelda(filaObjeto[llaveMapeo])}</td>`;
         }
 
         async function buscarPorDNI() {
@@ -238,12 +265,12 @@
 
             document.getElementById('areaImpresion').classList.add('hidden');
             document.getElementById('noResult').classList.add('hidden');
-            mostrarStatus(true, "Analizando base de datos nominal por índices de columnas...");
+            mostrarStatus(true, "Buscando niño en la base nominal indexada...");
 
             try {
                 let urlAPI = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${CARPETA_EXCELS}`;
                 const response = await fetch(urlAPI);
-                if (!response.ok) throw new Error("Fallo de red al conectar con el servidor.");
+                if (!response.ok) throw new Error("Fallo de conexión con GitHub.");
 
                 const archivos = await response.json();
                 const archivosExcel = archivos.filter(file => file.name.endsWith('.xlsx'));
@@ -259,11 +286,8 @@
                     const workbook = XLSX.read(data, { type: 'array' });
                     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                     
-                    // Extraer los datos usando como propiedad la letra real de la columna de Excel (A, B, C, D...)
                     const listaNiños = XLSX.utils.sheet_to_json(worksheet, { header: "A", defval: "-" });
-
-                    // Columna D es donde se ubica el DNI del niño en tu matriz
-                    niñoEncontrado = listaNiños.find(fila => String(fila['D23456' ? 'D' : 'D']).trim() === dniBuscado || String(fila['D']).trim() === dniBuscado);
+                    niñoEncontrado = listaNiños.find(fila => String(fila['D']).trim() === dniBuscado);
 
                     if (niñoEncontrado) {
                         nombreArchivoOrigen = archivo.name;
@@ -279,7 +303,7 @@
                 }
             } catch (error) {
                 mostrarStatus(false);
-                alert("Error de procesamiento: " + error.message);
+                alert("Error: " + error.message);
             }
         }
 
@@ -294,32 +318,39 @@
             document.getElementById('areaImpresion').classList.remove('hidden');
             document.getElementById('origenArchivo').innerText = "Fuente: " + archivo;
 
-            // Mapeo directo de Filiación Básica
-            document.getElementById('resNombre').innerText = fila['C'] || '-'; // Nombre (Columna C)
-            document.getElementById('resDNI').innerText = fila['D'] || '-';    // DNI (Columna D)
-            document.getElementById('resFechaNac').innerText = formatearValorCelda(fila['E']); // Fecha Nac (Columna E)
+            document.getElementById('resNombre').innerText = fila['C'] || '-';
+            document.getElementById('resDNI').innerText = fila['D'] || '-';
+            document.getElementById('resFechaNac').innerText = formatearValorCelda(fila['E']);
             document.getElementById('resEdad').innerText = calcularEdadExacta(fila['E']);
 
-            // 1. Renderizar Controles CRED
+            // 1. Renderizar Controles CRED con Gestión de Campos Oscuros
             const credBody = document.getElementById('credTableBody');
             credBody.innerHTML = '';
             MAPEO_CRED.forEach(m => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition-colors";
-                tr.innerHTML = `
-                    <td class="px-3 py-2 text-left bg-slate-50 font-bold border-r border-slate-200">${m.etapa}</td>
-                    <td class="px-1 py-2 border-r border-slate-200">${formatearValorCelda(fila[m.n1])}</td>
-                    <td class="px-1 py-2 border-r border-slate-200">${formatearValorCelda(fila[m.n2])}</td>
-                    <td class="px-1 py-2 border-r border-slate-200">${formatearValorCelda(fila[m.n3])}</td>
-                    <td class="px-1 py-2 border-r border-slate-200">${formatearValorCelda(fila[m.n4])}</td>
-                    <td class="px-1 py-2 border-r border-slate-200">${formatearValorCelda(fila[m.n5])}</td>
-                    <td class="px-1 py-2 border-r border-slate-200">${formatearValorCelda(fila[m.n6])}</td>
-                    <td class="px-1 py-2">${formatearValorCelda(fila[m.n7])}</td>
-                `;
+                
+                // Construcción celda por celda evaluando los topes de celdas oscuras
+                let htmlCeldas = `<td class="px-3 py-2 text-left bg-slate-50 font-bold border-r border-slate-200">${m.etapa}</td>`;
+                htmlCeldas += obtenerHTMLCeldaCred(m.n1, fila);
+                htmlCeldas += obtenerHTMLCeldaCred(m.n2, fila);
+                htmlCeldas += obtenerHTMLCeldaCred(m.n3, fila);
+                htmlCeldas += obtenerHTMLCeldaCred(m.n4, fila);
+                htmlCeldas += obtenerHTMLCeldaCred(m.n5, fila);
+                htmlCeldas += obtenerHTMLCeldaCred(m.n6, fila);
+                
+                // Última celda sin borde derecho exterior
+                if (m.n7 === "GRIS") {
+                    htmlCeldas += `<td class="bg-slate-300"></td>`;
+                } else {
+                    htmlCeldas += `<td>${formatearValorCelda(fila[m.n7])}</td>`;
+                }
+
+                tr.innerHTML = htmlCeldas;
                 credBody.appendChild(tr);
             });
 
-            // 2. Renderizar Suplementación con Hierro
+            // 2. Renderizar Hierro
             const hierroBody = document.getElementById('hierroTableBody');
             hierroBody.innerHTML = '';
             MAPEO_HIERRO.forEach(m => {
@@ -332,7 +363,7 @@
                 hierroBody.appendChild(tr);
             });
 
-            // 3. Renderizar Dosajes de Hemoglobina
+            // 3. Renderizar Hemoglobina
             const hbBody = document.getElementById('hbTableBody');
             hbBody.innerHTML = '';
             MAPEO_HB.forEach(m => {
@@ -345,7 +376,7 @@
                 hbBody.appendChild(tr);
             });
 
-            // 4. Renderizar Esquema de Vacunación con Agrupamiento Seguro
+            // 4. Renderizar Vacunas
             const vacunasBody = document.getElementById('vacunasTableBody');
             vacunasBody.innerHTML = '';
             
@@ -373,17 +404,9 @@
             });
         }
 
+        // Sistema de descarga nativo a PDF (Previene fallos con Tailwind v4)
         function exportarAPDF() {
-            const elemento = document.getElementById('areaImpresion');
-            const dniArchivo = document.getElementById('resDNI').innerText || 'Ficha';
-            const opciones = {
-                margin:       [8, 8, 8, 8], 
-                filename:     `Ficha_CRED_DNI_${dniArchivo}.pdf`,
-                image:        { type: 'jpeg', quality: 0.99 },
-                html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            html2pdf().set(opciones).from(elemento).save();
+            window.print();
         }
     </script>
 </body>
