@@ -27,7 +27,7 @@
 
     <div class="w-full max-w-5xl bg-white rounded-xl shadow-md p-5 mb-4 no-print border border-slate-200">
         <h1 class="text-2xl font-bold text-slate-800 text-center mb-1">Sistema de Consulta Nominal Integrado</h1>
-        <p class="text-xs text-slate-500 text-center mb-5">Extracción directa según matriz estricta de columnas Excel</p>
+        <p class="text-xs text-slate-500 text-center mb-5">Mapeo estricto e indexado por columnas nativas de Excel</p>
 
         <div class="flex flex-col sm:flex-row gap-3">
             <input type="text" id="dniInput" placeholder="Ingrese el número de DNI del niño" 
@@ -61,9 +61,9 @@
         </div>
         
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200/60">
-            <div><span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Nombre del Niño (Columna C)</span> <p id="resNombre" class="text-base font-bold text-slate-900 truncate">-</p></div>
-            <div><span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">DNI (Columna D)</span> <p id="resDNI" class="text-base font-mono font-bold text-slate-900">-</p></div>
-            <div><span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Fecha de Nac. (Columna E)</span> <p id="resFechaNac" class="text-base font-medium text-slate-900">-</p></div>
+            <div><span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Nombre del Niño (Col. C)</span> <p id="resNombre" class="text-base font-bold text-slate-900 truncate">-</p></div>
+            <div><span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">DNI (Col. D)</span> <p id="resDNI" class="text-base font-mono font-bold text-slate-900">-</p></div>
+            <div><span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Fecha de Nac. (Col. E)</span> <p id="resFechaNac" class="text-base font-medium text-slate-900">-</p></div>
             <div><span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Edad Cronológica</span> <p id="resEdad" class="text-base font-extrabold text-blue-700">-</p></div>
         </div>
 
@@ -99,7 +99,7 @@
                     <table class="min-w-full bg-white text-[11px]">
                         <thead class="bg-slate-50 text-slate-600 uppercase font-bold text-center border-b border-slate-200">
                             <tr>
-                                <th class="px-3 py-2 border-r border-slate-200 text-left">Edad</th>
+                                <th class="px-3 py-2 border-r border-slate-200 text-left">Edad de Control</th>
                                 <th class="px-3 py-2">Fecha Registrada</th>
                             </tr>
                         </thead>
@@ -116,7 +116,7 @@
                     <table class="min-w-full bg-white text-[11px]">
                         <thead class="bg-slate-50 text-slate-600 uppercase font-bold text-center border-b border-slate-200">
                             <tr>
-                                <th class="px-3 py-2 border-r border-slate-200 text-left">Edad de Control</th>
+                                <th class="px-3 py-2 border-r border-slate-200 text-left">Edad Evaluada</th>
                                 <th class="px-3 py-2">Resultado / Valor</th>
                             </tr>
                         </thead>
@@ -130,15 +130,16 @@
             <h3 class="text-sm font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-md mb-3 flex items-center gap-2">
                 <span class="w-1.5 h-3.5 bg-indigo-600 rounded-full"></span> ESQUEMA DE VACUNACIÓN POR GRUPOS DE EDAD
             </h3>
-            <div class="overflow-x-auto border border-slate-200 rounded-lg">
+            <div class="overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
                 <table class="min-w-full bg-white text-[11px]">
                     <thead class="bg-slate-50 text-slate-600 uppercase font-bold text-center border-b border-slate-200">
                         <tr>
-                            <th class="px-3 py-2 border-r border-slate-200 text-left w-1/4">Grupo / Vacuna</th>
-                            <th class="px-2 py-2 border-r border-slate-200">Dosis Única</th>
-                            <th class="px-2 py-2 border-r border-slate-200">Dosis-1</th>
-                            <th class="px-2 py-2 border-r border-slate-200">Dosis-2</th>
-                            <th class="px-2 py-2">Dosis-3</th>
+                            <th class="px-3 py-2 border-r border-slate-200 text-left w-24">Grupo Edad</th>
+                            <th class="px-3 py-2 border-r border-slate-200 text-left">Vacuna / Biológico</th>
+                            <th class="px-2 py-2 border-r border-slate-200 w-28">Dosis Única</th>
+                            <th class="px-2 py-2 border-r border-slate-200 w-28">Dosis-1</th>
+                            <th class="px-2 py-2 border-r border-slate-200 w-28">Dosis-2</th>
+                            <th class="px-2 py-2 w-28">Dosis-3</th>
                         </tr>
                     </thead>
                     <tbody id="vacunasTableBody" class="divide-y divide-slate-200 text-slate-700 font-medium"></tbody>
@@ -157,55 +158,53 @@
         const GITHUB_REPO = "LibretaBoys";
         const CARPETA_EXCELS = "ExcelBoys"; 
 
-        // 1. Mapeo estricto de Controles CRED (Las claves reflejan los encabezados de tu Excel)
+        // MAPEO DIRECTO POR LETRA DE COLUMNA DE EXCEL (Evita errores por cabeceras complejas o combinadas)
         const MAPEO_CRED = [
-            { etapa: "RECIEN NACIDO", n1: "RECIEN NACIDO_N-1", n2: "RECIEN NACIDO_N-2", n3: "RECIEN NACIDO_N-3", n4: "", n5: "", n6: "", n7: "" },
-            { etapa: "MENOR DE UN AÑO", n1: "MENOR DE UN AÑO_N-1", n2: "MENOR DE UN AÑO_N-2", n3: "MENOR DE UN AÑO_N-3", n4: "MENOR DE UN AÑO_N-4", n5: "MENOR DE UN AÑO_N-5", n6: "MENOR DE UN AÑO_N-6", n7: "MENOR DE UN AÑO_N-7" },
-            { etapa: "UN AÑO", n1: "UN AÑO_N-1", n2: "UN AÑO_N-2", n3: "UN AÑO_N-3", n4: "UN AÑO_N-4", n5: "", n6: "", n7: "" },
-            { etapa: "DOS AÑOS", n1: "DOS AÑOS_N-1", n2: "DOS AÑOS_N-2", n3: "", n4: "", n5: "", n6: "", n7: "" },
-            { etapa: "TRES AÑOS", n1: "TRES AÑOS_N-1", n2: "TRES AÑOS_N-2", n3: "", n4: "", n5: "", n6: "", n7: "" },
-            { etapa: "CUATRO AÑOS", n1: "CUATRO AÑOS_N-1", n2: "CUATRO AÑOS_N-2", n3: "", n4: "", n5: "", n6: "", n7: "" }
+            { etapa: "RECIEN NACIDO", n1: "G", n2: "H", n3: "I", n4: "", n5: "", n6: "", n7: "" },
+            { etapa: "MENOR DE UN AÑO", n1: "K", n2: "L", n3: "Q", n4: "R", n5: "AA", n6: "AE", n7: "AI" },
+            { etapa: "UN AÑO", n1: "AP", n2: "AU", n3: "AX", n4: "AY", n5: "", n6: "", n7: "" },
+            { etapa: "DOS AÑOS", n1: "BF", n2: "BH", n3: "", n4: "", n5: "", n6: "", n7: "" },
+            { etapa: "TRES AÑOS", n1: "BK", n2: "BM", n3: "", n4: "", n5: "", n6: "", n7: "" },
+            { etapa: "CUATRO AÑOS", n1: "BP", n2: "BT", n3: "", n4: "", n5: "", n6: "", n7: "" }
         ];
 
-        // 2. Mapeo estricto de Suplementación con Hierro
         const MAPEO_HIERRO = [
-            { edad: "4 MESES (Col. S)", columna: "SUPLEMENTACION HIERRO_4 MESES" },
-            { edad: "6 MESES (Col. AA)", columna: "SUPLEMENTACION HIERRO_6 MESES" },
-            { edad: "7 MESES (Col. AF)", columna: "SUPLEMENTACION HIERRO_7 MESES" },
-            { edad: "8 MESES (Col. AH)", columna: "SUPLEMENTACION HIERRO_8 MESES" },
-            { edad: "9 MESES (Col. AJ)", columna: "SUPLEMENTACION HIERRO_9 MESES" },
-            { edad: "10 MESES (Col. AM)", columna: "SUPLEMENTACION HIERRO_10 MESES" },
-            { edad: "11 MESES (Col. AO)", columna: "SUPLEMENTACION HIERRO_11 MESES" }
+            { edad: "4 MESES (Col. S)", col: "S" },
+            { edad: "6 MESES (Col. AA)", col: "AA" },
+            { edad: "7 MESES (Col. AF)", col: "AF" },
+            { edad: "8 MESES (Col. AH)", col: "AH" },
+            { edad: "9 MESES (Col. AJ)", col: "AJ" },
+            { edad: "10 MESES (Col. AM)", col: "AM" },
+            { edad: "11 MESES (Col. AO)", col: "AO" }
         ];
 
-        // 3. Mapeo estricto de Dosaje de Hemoglobina
         const MAPEO_HB = [
-            { edad: "6 MESES (Col. AB)", columna: "DOSAJE HEMOGLOBINA_6 MESES" },
-            { edad: "9 MESES (Col. AK)", columna: "DOSAJE HEMOGLOBINA_9 MESES" },
-            { edad: "1 AÑO (Col. AQ)", columna: "DOSAJE HEMOGLOBINA_1 AÑO" },
-            { edad: "1 AÑO Y 6 MESES (Col. AZ)", columna: "DOSAJE HEMOGLOBINA_1 año y 6 messes" },
-            { edad: "2 AÑOS (Col. BG)", columna: "DOSAJE HEMOGLOBINA_2 años" },
-            { edad: "3 AÑOS (Col. BL)", columna: "DOSAJE HEMOGLOBINA_3 años" },
-            { edad: "4 AÑOS (Col. BQ)", columna: "DOSAJE HEMOGLOBINA_4 años" }
+            { edad: "6 MESES (Col. AB)", col: "AB" },
+            { edad: "9 MESES (Col. AK)", col: "AK" },
+            { edad: "1 AÑO (Col. AQ)", col: "AQ" },
+            { edad: "1 AÑO Y 6 MESES (Col. AZ)", col: "AZ" },
+            { edad: "2 AÑOS (Col. BG)", col: "BG" },
+            { edad: "3 AÑOS (Col. BL)", col: "BL" },
+            { edad: "4 AÑOS (Col. BQ)", col: "BQ" }
         ];
 
-        // 4. ESTRUCTURA COMPLETA POR GRUPOS DE EDAD PARA LAS VACUNAS (Matriz Exacta)
+        // ESTRUCTURA EXACTA POR GRUPOS CON SUS RESPECTIVAS COLUMNAS ASIGNADAS
         const ESQUEMA_VACUNAS_GRUPOS = [
-            { grupo: "MENOR DE 1 AÑO", nombre: "PENTAVALENTE", unica: "", d1: "PENTAVALENTE_DOSIS-1", d2: "PENTAVALENTE_DOSIS-2", d3: "PENTAVALENTE_DOSIS-3" },
-            { grupo: "MENOR DE 1 AÑO", nombre: "IPV", unica: "", d1: "IPV_DOSIS-1", d2: "IPV_DOSIS-2", d3: "IPV_DOSIS-3" },
-            { grupo: "MENOR DE 1 AÑO", nombre: "ROVATIRUS", unica: "", d1: "ROVATIRUS_DOSIS-1", d2: "ROVATIRUS_DOSIS-2", d3: "" },
-            { grupo: "MENOR DE 1 AÑO", nombre: "NEUMOCOCO", unica: "", d1: "NEUMOCOCO_DOSIS-1", d2: "NEUMOCOCO_DOSIS-2", d3: "" },
+            { grupo: "MENOR DE 1 AÑO", nombre: "PENTAVALENTE", unica: "", d1: "M", d2: "T", d3: "AC" },
+            { grupo: "MENOR DE 1 AÑO", nombre: "IPV", text: "", unica: "", d1: "N", d2: "U", d3: "AD" },
+            { grupo: "MENOR DE 1 AÑO", nombre: "ROVATIRUS", unica: "", d1: "O", d2: "V", d3: "" },
+            { grupo: "MENOR DE 1 AÑO", nombre: "NEUMOCOCO", unica: "", d1: "P", d2: "W", d3: "" },
             
-            { grupo: "1 AÑO", nombre: "NEUMOCOCO: 1 año", unica: "NEUMOCOCO: 1 año_DOSIS ÚNICA", d1: "", d2: "", d3: "" },
-            { grupo: "1 AÑO", nombre: "SARAMPIÓN (SPR)", unica: "", d1: "SARAMPIÓN (SPR)_DOSIS-1", d2: "SARAMPIÓN (SPR)_DOSIS-2", d3: "" },
-            { grupo: "1 AÑO", nombre: "VARICELA", unica: "VARICELA_DOSIS ÚNICA", d1: "", d2: "", d3: "" },
-            { grupo: "1 AÑO", nombre: "ANTI-FIEBRE AMARILLA (AMA)", unica: "ANTI-FIEBRE AMARILLA (AMA)_DOSIS ÚNICA", d1: "", d2: "", d3: "" },
-            { grupo: "1 AÑO", nombre: "HEPATITIS A", unica: "HEPATITIS A_DOSIS ÚNICA", d1: "", d2: "", d3: "" },
-            { grupo: "1 AÑO", nombre: "DPT", unica: "DPT_DOSIS ÚNICA", d1: "", d2: "", d3: "" },
-            { grupo: "1 AÑO", nombre: "REFUERZO POLIO", unica: "REFUERZO POLIO_DOSIS ÚNICA", d1: "", d2: "", d3: "" },
+            { grupo: "1 AÑO", nombre: "NEUMOCOCO: 1 año", unica: "AR", d1: "", d2: "", d3: "" },
+            { grupo: "1 AÑO", nombre: "SARAMPIÓN (SPR)", unica: "", d1: "AS", d2: "BC", d3: "" },
+            { grupo: "1 AÑO", nombre: "VARICELA", unica: "AT", d1: "", d2: "", d3: "" },
+            { grupo: "1 AÑO", nombre: "ANTI-FIEBRE AMARILLA (AMA)", unica: "AV", d1: "", d2: "", d3: "" },
+            { grupo: "1 AÑO", nombre: "HEPATITIS A", unica: "AW", d1: "", d2: "", d3: "" },
+            { grupo: "1 AÑO", nombre: "DPT", unica: "AB", d1: "", d2: "", d3: "" },
+            { grupo: "1 AÑO", nombre: "REFUERZO POLIO", unica: "BB", d1: "", d2: "", d3: "" },
             
-            { grupo: "4 AÑOS", nombre: "DPT", unica: "DPT_DOSIS ÚNICA_1" || "DPT_4 AÑOS", d1: "", d2: "", d3: "" },
-            { grupo: "4 AÑOS", nombre: "REFUERZO POLIO", unica: "REFUERZO POLIO_DOSIS ÚNICA_1" || "REFUERZO POLIO_4 AÑOS", d1: "", d2: "", d3: "" }
+            { grupo: "4 AÑOS", nombre: "DPT", unica: "BR", d1: "", d2: "", d3: "" },
+            { grupo: "4 AÑOS", nombre: "REFUERZO POLIO", unica: "BS", d1: "", d2: "", d3: "" }
         ];
 
         function calcularEdadExacta(fechaString) {
@@ -224,10 +223,13 @@
             return deY === 0 ? `${deM} meses y ${deD} días` : `${deY} años, ${deM} meses y ${deD} días`;
         }
 
-        function formatearFechaExcel(fechaInput) {
-            if (!fechaInput || fechaInput === '-') return "-";
-            if (!isNaN(fechaInput)) return new Date((fechaInput - 25569) * 86400 * 1000).toLocaleDateString('es-PE');
-            return fechaInput;
+        function formatearValorCelda(valor) {
+            if (!valor || valor === '-' || String(valor).trim() === '') return "-";
+            // Si es un número entero de 5 dígitos consecutivos, es muy probable que sea una fecha de Excel
+            if (!isNaN(valor) && String(valor).trim().length === 5) {
+                return new Date((valor - 25569) * 86400 * 1000).toLocaleDateString('es-PE');
+            }
+            return valor;
         }
 
         async function buscarPorDNI() {
@@ -236,12 +238,12 @@
 
             document.getElementById('areaImpresion').classList.add('hidden');
             document.getElementById('noResult').classList.add('hidden');
-            mostrarStatus(true, "Analizando base de datos nominal...");
+            mostrarStatus(true, "Analizando base de datos nominal por índices de columnas...");
 
             try {
                 let urlAPI = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${CARPETA_EXCELS}`;
                 const response = await fetch(urlAPI);
-                if (!response.ok) throw new Error("Error al consultar repositorio en Github.");
+                if (!response.ok) throw new Error("Fallo de red al conectar con el servidor.");
 
                 const archivos = await response.json();
                 const archivosExcel = archivos.filter(file => file.name.endsWith('.xlsx'));
@@ -254,14 +256,14 @@
                     const arrayBuffer = await resExcel.arrayBuffer();
                     const data = new Uint8Array(arrayBuffer);
                     
-                    // IMPORTANTE: Leemos con header: 1 para procesar combinaciones de celdas multinivel sin perder datos
                     const workbook = XLSX.read(data, { type: 'array' });
                     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                     
-                    // Convertimos unificando nombres de columnas compuestas
-                    const listaNiños = procesarExcelMultinivel(worksheet);
+                    // Extraer los datos usando como propiedad la letra real de la columna de Excel (A, B, C, D...)
+                    const listaNiños = XLSX.utils.sheet_to_json(worksheet, { header: "A", defval: "-" });
 
-                    niñoEncontrado = listaNiños.find(niño => String(niño['DNI']).trim() === dniBuscado);
+                    // Columna D es donde se ubica el DNI del niño en tu matriz
+                    niñoEncontrado = listaNiños.find(fila => String(fila['D23456' ? 'D' : 'D']).trim() === dniBuscado || String(fila['D']).trim() === dniBuscado);
 
                     if (niñoEncontrado) {
                         nombreArchivoOrigen = archivo.name;
@@ -281,51 +283,6 @@
             }
         }
 
-        // Función inteligente para mapear celdas combinadas de tus cabeceras (Fila 1: Grupos / Fila 2: Sub-columnas)
-        function procesarExcelMultinivel(worksheet) {
-            const matrizFilas = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '-' });
-            if (matrizFilas.length < 2) return [];
-
-            const filaGrupo = matrizFilas[0];  // Contiene CONTROL CRED, VACUNAS, MENOR DE 1 AÑO...
-            const filaDetalle = matrizFilas[1]; // Contiene RECIEN NACIDO, PENTAVALENTE, DOSIS-1, N-1...
-
-            // Reconstrucción de la cabecera exacta de columnas
-            let cabecerasLimpias = [];
-            let grupoActual = "";
-
-            for (let i = 0; i < filaDetalle.length; i++) {
-                if (filaGrupo[i] && filaGrupo[i] !== '-') {
-                    grupoActual = filaGrupo[i].trim();
-                }
-                
-                let detalle = filaDetalle[i] ? String(filaDetalle[i]).trim() : "";
-                
-                if (i === 2) { cabecerasLimpias.push("Nombre del Niño"); continue; }
-                if (i === 3) { cabecerasLimpias.push("DNI"); continue; }
-                if (i === 4) { cabecerasLimpias.push("Fecha Nac."); continue; }
-
-                if (grupoActual && detalle) {
-                    cabecerasLimpias.push(`${grupoActual}_${detalle}`);
-                } else {
-                    cabecerasLimpias.push(detalle || `Columna_${i}`);
-                }
-            }
-
-            // Mapeo final del set de filas de pacientes
-            let registrosJSON = [];
-            for (let f = 2; f < matrizFilas.length; f++) {
-                let fila = matrizFilas[f];
-                if (!fila[3] || fila[3] === '-') continue; // Ignora líneas vacías sin DNI
-                
-                let objetoPaciente = {};
-                cabecerasLimpias.forEach((nombreCol, index) => {
-                    objetoPaciente[nombreCol] = fila[index] !== undefined ? fila[index] : '-';
-                });
-                registrosJSON.push(objetoPaciente);
-            }
-            return registrosJSON;
-        }
-
         function mostrarStatus(show, text = "") {
             const statusDiv = document.getElementById('statusMessage');
             const statusText = document.getElementById('statusText');
@@ -333,80 +290,84 @@
             if (show) statusText.innerText = text;
         }
 
-        function renderizarResultado(datos, archivo) {
+        function renderizarResultado(fila, archivo) {
             document.getElementById('areaImpresion').classList.remove('hidden');
             document.getElementById('origenArchivo').innerText = "Fuente: " + archivo;
 
-            document.getElementById('resNombre').innerText = datos['Nombre del Niño'] || '-';
-            document.getElementById('resDNI').innerText = datos['DNI'] || '-';
-            document.getElementById('resFechaNac').innerText = formatearFechaExcel(datos['Fecha Nac.']);
-            document.getElementById('resEdad').innerText = calcularEdadExacta(datos['Fecha Nac.']);
+            // Mapeo directo de Filiación Básica
+            document.getElementById('resNombre').innerText = fila['C'] || '-'; // Nombre (Columna C)
+            document.getElementById('resDNI').innerText = fila['D'] || '-';    // DNI (Columna D)
+            document.getElementById('resFechaNac').innerText = formatearValorCelda(fila['E']); // Fecha Nac (Columna E)
+            document.getElementById('resEdad').innerText = calcularEdadExacta(fila['E']);
 
-            // 1. Inyectar Controles CRED
+            // 1. Renderizar Controles CRED
             const credBody = document.getElementById('credTableBody');
             credBody.innerHTML = '';
-            MAPEO_CRED.forEach(fila => {
+            MAPEO_CRED.forEach(m => {
                 const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
                 tr.innerHTML = `
-                    <td class="px-3 py-2 text-left bg-slate-50 font-bold border-r border-slate-200">${fila.etapa}</td>
-                    <td class="px-1 py-2 border-r border-slate-200">${datos[fila.n1] || (fila.n1 ? '-' : '')}</td>
-                    <td class="px-1 py-2 border-r border-slate-200">${datos[fila.n2] || (fila.n2 ? '-' : '')}</td>
-                    <td class="px-1 py-2 border-r border-slate-200">${datos[fila.n3] || (fila.n3 ? '-' : '')}</td>
-                    <td class="px-1 py-2 border-r border-slate-200">${datos[fila.n4] || (fila.n4 ? '-' : '')}</td>
-                    <td class="px-1 py-2 border-r border-slate-200">${datos[fila.n5] || (fila.n5 ? '-' : '')}</td>
-                    <td class="px-1 py-2 border-r border-slate-200">${datos[fila.n6] || (fila.n6 ? '-' : '')}</td>
-                    <td class="px-1 py-2">${datos[fila.n7] || (fila.n7 ? '-' : '')}</td>
+                    <td class="px-3 py-2 text-left bg-slate-50 font-bold border-r border-slate-200">${m.etapa}</td>
+                    <td class="px-1 py-2 border-r border-slate-200">${formatearValorCelda(fila[m.n1])}</td>
+                    <td class="px-1 py-2 border-r border-slate-200">${formatearValorCelda(fila[m.n2])}</td>
+                    <td class="px-1 py-2 border-r border-slate-200">${formatearValorCelda(fila[m.n3])}</td>
+                    <td class="px-1 py-2 border-r border-slate-200">${formatearValorCelda(fila[m.n4])}</td>
+                    <td class="px-1 py-2 border-r border-slate-200">${formatearValorCelda(fila[m.n5])}</td>
+                    <td class="px-1 py-2 border-r border-slate-200">${formatearValorCelda(fila[m.n6])}</td>
+                    <td class="px-1 py-2">${formatearValorCelda(fila[m.n7])}</td>
                 `;
                 credBody.appendChild(tr);
             });
 
-            // 2. Inyectar Suplementación con Hierro
+            // 2. Renderizar Suplementación con Hierro
             const hierroBody = document.getElementById('hierroTableBody');
             hierroBody.innerHTML = '';
-            MAPEO_HIERRO.forEach(item => {
+            MAPEO_HIERRO.forEach(m => {
                 const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50";
                 tr.innerHTML = `
-                    <td class="px-3 py-2 font-semibold bg-slate-50 border-r border-slate-200">${item.edad}</td>
-                    <td class="px-3 py-2 text-center">${formatearFechaExcel(datos[item.columna])}</td>
+                    <td class="px-3 py-2 font-semibold bg-slate-50 border-r border-slate-200">${m.edad}</td>
+                    <td class="px-3 py-2 text-center">${formatearValorCelda(fila[m.col])}</td>
                 `;
                 hierroBody.appendChild(tr);
             });
 
-            // 3. Inyectar Dosajes de Hemoglobina
+            // 3. Renderizar Dosajes de Hemoglobina
             const hbBody = document.getElementById('hbTableBody');
             hbBody.innerHTML = '';
-            MAPEO_HB.forEach(item => {
+            MAPEO_HB.forEach(m => {
                 const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50";
                 tr.innerHTML = `
-                    <td class="px-3 py-2 font-semibold bg-slate-50 border-r border-slate-200">${item.edad}</td>
-                    <td class="px-3 py-2 text-center font-bold text-slate-900">${datos[item.columna] || '-'}</td>
+                    <td class="px-3 py-2 font-semibold bg-slate-50 border-r border-slate-200">${m.edad}</td>
+                    <td class="px-3 py-2 text-center font-bold text-slate-900">${formatearValorCelda(fila[m.col])}</td>
                 `;
                 hbBody.appendChild(tr);
             });
 
-            // 4. Inyectar Esquema de Vacunación Ordenado por Grupo de Edad
+            // 4. Renderizar Esquema de Vacunación con Agrupamiento Seguro
             const vacunasBody = document.getElementById('vacunasTableBody');
             vacunasBody.innerHTML = '';
             
             let ultimoGrupo = "";
-            ESQUEMA_VACUNAS_GRUPOS.forEach(fila => {
+            ESQUEMA_VACUNAS_GRUPOS.forEach(v => {
                 const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
                 
-                // Generar celda combinada de grupo de edad si cambia de categoría
                 let celdaGrupo = "";
-                if (fila.grupo !== ultimoGrupo) {
-                    const totalFilasGrupo = ESQUEMA_VACUNAS_GRUPOS.filter(v => v.grupo === fila.grupo).length;
-                    celdaGrupo = `<td rowspan="${totalFilasGrupo}" class="px-2 py-2 text-left bg-blue-50/60 font-black text-blue-900 border-r border-slate-200 uppercase tracking-wider align-middle w-24">${fila.grupo}</td>`;
-                    ultimoGrupo = fila.grupo;
+                if (v.grupo !== ultimoGrupo) {
+                    const totalFilasGrupo = ESQUEMA_VACUNAS_GRUPOS.filter(item => item.grupo === v.grupo).length;
+                    celdaGrupo = `<td rowspan="${totalFilasGrupo}" class="px-3 py-2 text-left bg-blue-50/70 font-black text-blue-900 border-r border-slate-200 uppercase tracking-wider align-middle w-24">${v.grupo}</td>`;
+                    ultimoGrupo = v.grupo;
                 }
 
                 tr.innerHTML = `
                     ${celdaGrupo}
-                    <td class="px-3 py-2 text-left bg-slate-50 font-bold border-r border-slate-200">${fila.nombre}</td>
-                    <td class="px-2 py-2 border-r border-slate-200 ${fila.unica ? '' : 'bg-slate-100/70 text-slate-400'}">${datos[fila.unica] || (fila.unica ? '-' : '')}</td>
-                    <td class="px-2 py-2 border-r border-slate-200 ${fila.d1 ? '' : 'bg-slate-100/70 text-slate-400'}">${datos[fila.d1] || (fila.d1 ? '-' : '')}</td>
-                    <td class="px-2 py-2 border-r border-slate-200 ${fila.d2 ? '' : 'bg-slate-100/70 text-slate-400'}">${datos[fila.d2] || (fila.d2 ? '-' : '')}</td>
-                    <td class="px-2 py-2 ${fila.d3 ? '' : 'bg-slate-100/70 text-slate-400'}">${datos[fila.d3] || (fila.d3 ? '-' : '')}</td>
+                    <td class="px-3 py-2 text-left bg-slate-50 font-bold border-r border-slate-200">${v.nombre}</td>
+                    <td class="px-2 py-2 border-r border-slate-200 ${v.unica ? '' : 'bg-slate-100/70 text-slate-400'}">${formatearValorCelda(fila[v.unica])}</td>
+                    <td class="px-2 py-2 border-r border-slate-200 ${v.d1 ? '' : 'bg-slate-100/70 text-slate-400'}">${formatearValorCelda(fila[v.d1])}</td>
+                    <td class="px-2 py-2 border-r border-slate-200 ${v.d2 ? '' : 'bg-slate-100/70 text-slate-400'}">${formatearValorCelda(fila[v.d2])}</td>
+                    <td class="px-2 py-2 ${v.d3 ? '' : 'bg-slate-100/70 text-slate-400'}">${formatearValorCelda(fila[v.d3])}</td>
                 `;
                 vacunasBody.appendChild(tr);
             });
