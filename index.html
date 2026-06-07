@@ -7,7 +7,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
     <style>
         .loader {
             border-top-color: #2563eb;
@@ -17,7 +16,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* Estilos optimizados para la impresión limpia en el PDF */
         @media print {
             .no-print { display: none !important; }
             body { background-color: #ffffff; padding: 0; }
@@ -29,7 +27,7 @@
 
     <div class="w-full max-w-5xl bg-white rounded-xl shadow-md p-5 mb-4 no-print border border-slate-200">
         <h1 class="text-2xl font-bold text-slate-800 text-center mb-1">Sistema de Consulta Nominal Integrado</h1>
-        <p class="text-xs text-slate-500 text-center mb-5">Repositorio digital en tiempo real • Carpeta ExcelBoys</p>
+        <p class="text-xs text-slate-500 text-center mb-5">Extracción directa según matriz estricta de columnas Excel</p>
 
         <div class="flex flex-col sm:flex-row gap-3">
             <input type="text" id="dniInput" placeholder="Ingrese el número de DNI del niño" 
@@ -43,7 +41,7 @@
 
         <div id="statusMessage" class="hidden text-center mt-4 text-slate-600 flex items-center justify-center gap-2">
             <div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-200 h-5 w-5"></div>
-            <span id="statusText" class="text-sm font-medium">Procesando...</span>
+            <span id="statusText" class="text-sm font-medium">Buscando...</span>
         </div>
     </div>
 
@@ -56,16 +54,16 @@
             </div>
             <div class="flex items-center gap-2 no-print">
                 <button onclick="exportarAPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow transition-all duration-150 cursor-pointer flex items-center gap-1">
-                     Descargar PDF
+                     Descargar Ficha PDF
                 </button>
                 <span id="origenArchivo" class="text-xs bg-slate-100 text-slate-600 px-3 py-2 rounded-lg font-mono border border-slate-200"></span>
             </div>
         </div>
         
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200/60">
-            <div><span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Nombre del Niño (Col. C)</span> <p id="resNombre" class="text-base font-bold text-slate-900 truncate">-</p></div>
-            <div><span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">DNI (Col. D)</span> <p id="resDNI" class="text-base font-mono font-bold text-slate-900">-</p></div>
-            <div><span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Fecha de Nacimiento (Col. E)</span> <p id="resFechaNac" class="text-base font-medium text-slate-900">-</p></div>
+            <div><span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Nombre del Niño (Columna C)</span> <p id="resNombre" class="text-base font-bold text-slate-900 truncate">-</p></div>
+            <div><span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">DNI (Columna D)</span> <p id="resDNI" class="text-base font-mono font-bold text-slate-900">-</p></div>
+            <div><span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Fecha de Nac. (Columna E)</span> <p id="resFechaNac" class="text-base font-medium text-slate-900">-</p></div>
             <div><span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">Edad Cronológica</span> <p id="resEdad" class="text-base font-extrabold text-blue-700">-</p></div>
         </div>
 
@@ -77,7 +75,7 @@
                 <table class="min-w-full bg-white text-[11px]">
                     <thead class="bg-slate-50 text-slate-600 uppercase font-bold text-center border-b border-slate-200">
                         <tr>
-                            <th class="px-3 py-2 border-r border-slate-200 text-left w-1/4">Etapa Evaluada</th>
+                            <th class="px-3 py-2 border-r border-slate-200 text-left w-1/4">Control CRED</th>
                             <th class="px-1 py-2 border-r border-slate-200">N-1</th>
                             <th class="px-1 py-2 border-r border-slate-200">N-2</th>
                             <th class="px-1 py-2 border-r border-slate-200">N-3</th>
@@ -93,17 +91,16 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-            
             <div>
                 <h3 class="text-sm font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-md mb-3 flex items-center gap-2">
-                    <span class="w-1.5 h-3.5 bg-amber-500 rounded-full"></span> SUPLEMENTACIÓN CON HIERRO
+                    <span class="w-1.5 h-3.5 bg-amber-500 rounded-full"></span> SUPLEMENTACIÓN HIERRO
                 </h3>
                 <div class="overflow-x-auto border border-slate-200 rounded-lg">
                     <table class="min-w-full bg-white text-[11px]">
                         <thead class="bg-slate-50 text-slate-600 uppercase font-bold text-center border-b border-slate-200">
                             <tr>
                                 <th class="px-3 py-2 border-r border-slate-200 text-left">Edad</th>
-                                <th class="px-3 py-2">Fecha / Valor</th>
+                                <th class="px-3 py-2">Fecha Registrada</th>
                             </tr>
                         </thead>
                         <tbody id="hierroTableBody" class="divide-y divide-slate-200 text-slate-700 font-medium"></tbody>
@@ -113,39 +110,38 @@
 
             <div>
                 <h3 class="text-sm font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-md mb-3 flex items-center gap-2">
-                    <span class="w-1.5 h-3.5 bg-red-500 rounded-full"></span> DOSAJE DE HEMOGLOBINA
+                    <span class="w-1.5 h-3.5 bg-red-500 rounded-full"></span> DOSAJE HEMOGLOBINA
                 </h3>
                 <div class="overflow-x-auto border border-slate-200 rounded-lg">
                     <table class="min-w-full bg-white text-[11px]">
                         <thead class="bg-slate-50 text-slate-600 uppercase font-bold text-center border-b border-slate-200">
                             <tr>
                                 <th class="px-3 py-2 border-r border-slate-200 text-left">Edad de Control</th>
-                                <th class="px-3 py-2">Resultado / Control</th>
+                                <th class="px-3 py-2">Resultado / Valor</th>
                             </tr>
                         </thead>
                         <tbody id="hbTableBody" class="divide-y divide-slate-200 text-slate-700 font-medium"></tbody>
                     </table>
                 </div>
             </div>
-
         </div>
 
         <div>
             <h3 class="text-sm font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-md mb-3 flex items-center gap-2">
-                <span class="w-1.5 h-3.5 bg-indigo-600 rounded-full"></span> INMUNIZACIONES (ESQUEMA REGULAR)
+                <span class="w-1.5 h-3.5 bg-indigo-600 rounded-full"></span> ESQUEMA DE VACUNACIÓN POR GRUPOS DE EDAD
             </h3>
             <div class="overflow-x-auto border border-slate-200 rounded-lg">
                 <table class="min-w-full bg-white text-[11px]">
                     <thead class="bg-slate-50 text-slate-600 uppercase font-bold text-center border-b border-slate-200">
                         <tr>
-                            <th class="px-3 py-2 border-r border-slate-200 text-left w-1/4">Biológico / Vacuna</th>
+                            <th class="px-3 py-2 border-r border-slate-200 text-left w-1/4">Grupo / Vacuna</th>
                             <th class="px-2 py-2 border-r border-slate-200">Dosis Única</th>
-                            <th class="px-2 py-2 border-r border-slate-200">1ra Dosis</th>
-                            <th class="px-2 py-2 border-r border-slate-200">2da Dosis</th>
-                            <th class="px-2 py-2">3ra Dosis</th>
+                            <th class="px-2 py-2 border-r border-slate-200">Dosis-1</th>
+                            <th class="px-2 py-2 border-r border-slate-200">Dosis-2</th>
+                            <th class="px-2 py-2">Dosis-3</th>
                         </tr>
                     </thead>
-                    <tbody id="vacunasTableBody" class="divide-y divide-slate-200 text-center text-slate-700 font-medium"></tbody>
+                    <tbody id="vacunasTableBody" class="divide-y divide-slate-200 text-slate-700 font-medium"></tbody>
                 </table>
             </div>
         </div>
@@ -157,59 +153,63 @@
     </div>
 
     <script>
-        // CONFIGURACIÓN OFICIAL GITHUB REPO
         const GITHUB_USER = "DesarrolloInfantilTemprano-DIT";
         const GITHUB_REPO = "LibretaBoys";
         const CARPETA_EXCELS = "ExcelBoys"; 
 
-        // Diccionario estructurado para controles mensuales y anuales CRED
+        // 1. Mapeo estricto de Controles CRED (Las claves reflejan los encabezados de tu Excel)
         const MAPEO_CRED = [
-            { etapa: "RECIEN NACIDO", n1: "RN - CRED 1", n2: "RN - CRED 2", n3: "RN - CRED 3", n4: "", n5: "", n6: "", n7: "" },
-            { etapa: "MENOR DE UN AÑO", n1: "1M - CRED 1", n2: "2M - CRED 1", n3: "3M - CRED 1", n4: "4M - CRED 1", n5: "5M - CRED 1", n6: "6M - CRED 1", n7: "7M - CRED 1" },
-            { etapa: "UN AÑO", n1: "1 Año - CRED 1", n2: "1 Año - CRED 2", n3: "1 Año - CRED 3", n4: "1 Año - CRED 4", n5: "", n6: "", n7: "" },
-            { etapa: "DOS AÑOS", n1: "2 Años - CRED 1", n2: "2 Años - CRED 2", n3: "", n4: "", n5: "", n6: "", n7: "" },
-            { etapa: "TRES AÑOS", n1: "3 Años - CRED 1", n2: "3 Años - CRED 2", n3: "", n4: "", n5: "", n6: "", n7: "" },
-            { etapa: "CUATRO AÑOS", n1: "4 Años - CRED 1", n2: "4 Años - CRED 2", n3: "", n4: "", n5: "", n6: "", n7: "" }
+            { etapa: "RECIEN NACIDO", n1: "RECIEN NACIDO_N-1", n2: "RECIEN NACIDO_N-2", n3: "RECIEN NACIDO_N-3", n4: "", n5: "", n6: "", n7: "" },
+            { etapa: "MENOR DE UN AÑO", n1: "MENOR DE UN AÑO_N-1", n2: "MENOR DE UN AÑO_N-2", n3: "MENOR DE UN AÑO_N-3", n4: "MENOR DE UN AÑO_N-4", n5: "MENOR DE UN AÑO_N-5", n6: "MENOR DE UN AÑO_N-6", n7: "MENOR DE UN AÑO_N-7" },
+            { etapa: "UN AÑO", n1: "UN AÑO_N-1", n2: "UN AÑO_N-2", n3: "UN AÑO_N-3", n4: "UN AÑO_N-4", n5: "", n6: "", n7: "" },
+            { etapa: "DOS AÑOS", n1: "DOS AÑOS_N-1", n2: "DOS AÑOS_N-2", n3: "", n4: "", n5: "", n6: "", n7: "" },
+            { etapa: "TRES AÑOS", n1: "TRES AÑOS_N-1", n2: "TRES AÑOS_N-2", n3: "", n4: "", n5: "", n6: "", n7: "" },
+            { etapa: "CUATRO AÑOS", n1: "CUATRO AÑOS_N-1", n2: "CUATRO AÑOS_N-2", n3: "", n4: "", n5: "", n6: "", n7: "" }
         ];
 
-        // Mapeo estructurado para suplementación con hierro (Según tu última captura)
+        // 2. Mapeo estricto de Suplementación con Hierro
         const MAPEO_HIERRO = [
-            { edad: "4 MESES (Col. S)", columna: "4 MESES" },
-            { edad: "6 MESES (Col. AA)", columna: "6 MESES" },
-            { edad: "7 MESES (Col. AF)", columna: "7 MESES" },
-            { edad: "8 MESES (Col. AH)", columna: "8 MESES" },
-            { edad: "9 MESES (Col. AJ)", columna: "9 MESES" },
-            { edad: "10 MESES (Col. AM)", columna: "10 MESES" },
-            { edad: "11 MESES (Col. AO)", columna: "11 MESES" }
+            { edad: "4 MESES (Col. S)", columna: "SUPLEMENTACION HIERRO_4 MESES" },
+            { edad: "6 MESES (Col. AA)", columna: "SUPLEMENTACION HIERRO_6 MESES" },
+            { edad: "7 MESES (Col. AF)", columna: "SUPLEMENTACION HIERRO_7 MESES" },
+            { edad: "8 MESES (Col. AH)", columna: "SUPLEMENTACION HIERRO_8 MESES" },
+            { edad: "9 MESES (Col. AJ)", columna: "SUPLEMENTACION HIERRO_9 MESES" },
+            { edad: "10 MESES (Col. AM)", columna: "SUPLEMENTACION HIERRO_10 MESES" },
+            { edad: "11 MESES (Col. AO)", columna: "SUPLEMENTACION HIERRO_11 MESES" }
         ];
 
-        // Mapeo estructurado para dosajes de Hb (Según tu última captura)
+        // 3. Mapeo estricto de Dosaje de Hemoglobina
         const MAPEO_HB = [
-            { edad: "6 MESES (Col. AB)", columna: "6 MESES_1" || "6 MESES" }, // Ajustar si tus encabezados diferencian duplicados
-            { edad: "9 MESES (Col. AK)", columna: "9 MESES_1" || "9 MESES" },
-            { edad: "1 AÑO (Col. AQ)", columna: "1 AÑO" },
-            { edad: "1 AÑO Y 6 MESES (Col. AZ)", columna: "1 año y 6 messes" },
-            { edad: "2 AÑOS (Col. BG)", columna: "2 años" },
-            { edad: "3 AÑOS (Col. BL)", columna: "3 años" },
-            { edad: "4 AÑOS (Col. BQ)", columna: "4 años" }
+            { edad: "6 MESES (Col. AB)", columna: "DOSAJE HEMOGLOBINA_6 MESES" },
+            { edad: "9 MESES (Col. AK)", columna: "DOSAJE HEMOGLOBINA_9 MESES" },
+            { edad: "1 AÑO (Col. AQ)", columna: "DOSAJE HEMOGLOBINA_1 AÑO" },
+            { edad: "1 AÑO Y 6 MESES (Col. AZ)", columna: "DOSAJE HEMOGLOBINA_1 año y 6 messes" },
+            { edad: "2 AÑOS (Col. BG)", columna: "DOSAJE HEMOGLOBINA_2 años" },
+            { edad: "3 AÑOS (Col. BL)", columna: "DOSAJE HEMOGLOBINA_3 años" },
+            { edad: "4 AÑOS (Col. BQ)", columna: "DOSAJE HEMOGLOBINA_4 años" }
         ];
 
-        // Mapeo completo de inmunizaciones
-        const MAPEO_VACUNAS = [
-            { nombre: "PENTAVALENTE", unica: "", d1: "2M - Pent.", d2: "4M - Pent.", d3: "6M - Pent." },
-            { nombre: "IPV (Polio Inyectable)", unica: "", d1: "2M - IPV", d2: "4M - IPV", d3: "6M - IPV" },
-            { nombre: "ROTAVIRUS", unica: "", d1: "2M - Rotav.", d2: "4M - Rotav.", d3: "" },
-            { nombre: "NEUMOCOCO", unica: "1 Año - Neumo.", d1: "2M - Neumo.", d2: "4M - Neumo.", d3: "" },
-            { nombre: "SARAMPIÓN, PAPERA, RUBÉOLA (SPR)", unica: "", d1: "1 Año - SPR 1", d2: "1 Año - SPR 2", d3: "" },
-            { nombre: "VARICELA", unica: "1 Año - Varicela", d1: "", d2: "", d3: "" },
-            { nombre: "ANTI-FIEBRE AMARILLA (AMA)", unica: "1 Año - AMA", d1: "", d2: "", d3: "" },
-            { nombre: "HEPATITIS A", unica: "1 Año - Hep. A", d1: "", d2: "", d3: "" },
-            { nombre: "DPT (Refuerzos)", unica: "", d1: "1 Año - DPT", d2: "4 Años - DPT", d3: "" },
-            { nombre: "REFUERZO POLIO (Oral/Iny)", unica: "", d1: "1 Año - Polio Ref.", d2: "4 Años - Polio Ref.", d3: "" }
+        // 4. ESTRUCTURA COMPLETA POR GRUPOS DE EDAD PARA LAS VACUNAS (Matriz Exacta)
+        const ESQUEMA_VACUNAS_GRUPOS = [
+            { grupo: "MENOR DE 1 AÑO", nombre: "PENTAVALENTE", unica: "", d1: "PENTAVALENTE_DOSIS-1", d2: "PENTAVALENTE_DOSIS-2", d3: "PENTAVALENTE_DOSIS-3" },
+            { grupo: "MENOR DE 1 AÑO", nombre: "IPV", unica: "", d1: "IPV_DOSIS-1", d2: "IPV_DOSIS-2", d3: "IPV_DOSIS-3" },
+            { grupo: "MENOR DE 1 AÑO", nombre: "ROVATIRUS", unica: "", d1: "ROVATIRUS_DOSIS-1", d2: "ROVATIRUS_DOSIS-2", d3: "" },
+            { grupo: "MENOR DE 1 AÑO", nombre: "NEUMOCOCO", unica: "", d1: "NEUMOCOCO_DOSIS-1", d2: "NEUMOCOCO_DOSIS-2", d3: "" },
+            
+            { grupo: "1 AÑO", nombre: "NEUMOCOCO: 1 año", unica: "NEUMOCOCO: 1 año_DOSIS ÚNICA", d1: "", d2: "", d3: "" },
+            { grupo: "1 AÑO", nombre: "SARAMPIÓN (SPR)", unica: "", d1: "SARAMPIÓN (SPR)_DOSIS-1", d2: "SARAMPIÓN (SPR)_DOSIS-2", d3: "" },
+            { grupo: "1 AÑO", nombre: "VARICELA", unica: "VARICELA_DOSIS ÚNICA", d1: "", d2: "", d3: "" },
+            { grupo: "1 AÑO", nombre: "ANTI-FIEBRE AMARILLA (AMA)", unica: "ANTI-FIEBRE AMARILLA (AMA)_DOSIS ÚNICA", d1: "", d2: "", d3: "" },
+            { grupo: "1 AÑO", nombre: "HEPATITIS A", unica: "HEPATITIS A_DOSIS ÚNICA", d1: "", d2: "", d3: "" },
+            { grupo: "1 AÑO", nombre: "DPT", unica: "DPT_DOSIS ÚNICA", d1: "", d2: "", d3: "" },
+            { grupo: "1 AÑO", nombre: "REFUERZO POLIO", unica: "REFUERZO POLIO_DOSIS ÚNICA", d1: "", d2: "", d3: "" },
+            
+            { grupo: "4 AÑOS", nombre: "DPT", unica: "DPT_DOSIS ÚNICA_1" || "DPT_4 AÑOS", d1: "", d2: "", d3: "" },
+            { grupo: "4 AÑOS", nombre: "REFUERZO POLIO", unica: "REFUERZO POLIO_DOSIS ÚNICA_1" || "REFUERZO POLIO_4 AÑOS", d1: "", d2: "", d3: "" }
         ];
 
         function calcularEdadExacta(fechaString) {
-            if (!fechaString) return "-";
+            if (!fechaString || fechaString === '-') return "-";
             let fechaNac = !isNaN(fechaString) ? new Date((fechaString - 25569) * 86400 * 1000) : new Date(fechaString);
             if (isNaN(fechaNac.getTime())) return "Fecha inválida";
             
@@ -225,7 +225,7 @@
         }
 
         function formatearFechaExcel(fechaInput) {
-            if (!fechaInput) return "-";
+            if (!fechaInput || fechaInput === '-') return "-";
             if (!isNaN(fechaInput)) return new Date((fechaInput - 25569) * 86400 * 1000).toLocaleDateString('es-PE');
             return fechaInput;
         }
@@ -236,12 +236,12 @@
 
             document.getElementById('areaImpresion').classList.add('hidden');
             document.getElementById('noResult').classList.add('hidden');
-            mostrarStatus(true, "Extrayendo información nominal...");
+            mostrarStatus(true, "Analizando base de datos nominal...");
 
             try {
                 let urlAPI = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${CARPETA_EXCELS}`;
                 const response = await fetch(urlAPI);
-                if (!response.ok) throw new Error("Fallo en la comunicación con la base de datos.");
+                if (!response.ok) throw new Error("Error al consultar repositorio en Github.");
 
                 const archivos = await response.json();
                 const archivosExcel = archivos.filter(file => file.name.endsWith('.xlsx'));
@@ -253,16 +253,15 @@
                     const resExcel = await fetch(archivo.download_url);
                     const arrayBuffer = await resExcel.arrayBuffer();
                     const data = new Uint8Array(arrayBuffer);
+                    
+                    // IMPORTANTE: Leemos con header: 1 para procesar combinaciones de celdas multinivel sin perder datos
                     const workbook = XLSX.read(data, { type: 'array' });
                     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                     
-                    // Con defval: '-' forzamos a que si la celda está vacía, devuelva un guion directamente
-                    const listaNiños = XLSX.utils.sheet_to_json(worksheet, { defval: '-' });
+                    // Convertimos unificando nombres de columnas compuestas
+                    const listaNiños = procesarExcelMultinivel(worksheet);
 
-                    niñoEncontrado = listaNiños.find(niño => {
-                        const dniOriginal = niño['DNI'] || niño['Dni'] || niño['dni'] || '';
-                        return String(dniOriginal).trim() === dniBuscado;
-                    });
+                    niñoEncontrado = listaNiños.find(niño => String(niño['DNI']).trim() === dniBuscado);
 
                     if (niñoEncontrado) {
                         nombreArchivoOrigen = archivo.name;
@@ -278,8 +277,53 @@
                 }
             } catch (error) {
                 mostrarStatus(false);
-                alert("Error operativo: " + error.message);
+                alert("Error de procesamiento: " + error.message);
             }
+        }
+
+        // Función inteligente para mapear celdas combinadas de tus cabeceras (Fila 1: Grupos / Fila 2: Sub-columnas)
+        function procesarExcelMultinivel(worksheet) {
+            const matrizFilas = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '-' });
+            if (matrizFilas.length < 2) return [];
+
+            const filaGrupo = matrizFilas[0];  // Contiene CONTROL CRED, VACUNAS, MENOR DE 1 AÑO...
+            const filaDetalle = matrizFilas[1]; // Contiene RECIEN NACIDO, PENTAVALENTE, DOSIS-1, N-1...
+
+            // Reconstrucción de la cabecera exacta de columnas
+            let cabecerasLimpias = [];
+            let grupoActual = "";
+
+            for (let i = 0; i < filaDetalle.length; i++) {
+                if (filaGrupo[i] && filaGrupo[i] !== '-') {
+                    grupoActual = filaGrupo[i].trim();
+                }
+                
+                let detalle = filaDetalle[i] ? String(filaDetalle[i]).trim() : "";
+                
+                if (i === 2) { cabecerasLimpias.push("Nombre del Niño"); continue; }
+                if (i === 3) { cabecerasLimpias.push("DNI"); continue; }
+                if (i === 4) { cabecerasLimpias.push("Fecha Nac."); continue; }
+
+                if (grupoActual && detalle) {
+                    cabecerasLimpias.push(`${grupoActual}_${detalle}`);
+                } else {
+                    cabecerasLimpias.push(detalle || `Columna_${i}`);
+                }
+            }
+
+            // Mapeo final del set de filas de pacientes
+            let registrosJSON = [];
+            for (let f = 2; f < matrizFilas.length; f++) {
+                let fila = matrizFilas[f];
+                if (!fila[3] || fila[3] === '-') continue; // Ignora líneas vacías sin DNI
+                
+                let objetoPaciente = {};
+                cabecerasLimpias.forEach((nombreCol, index) => {
+                    objetoPaciente[nombreCol] = fila[index] !== undefined ? fila[index] : '-';
+                });
+                registrosJSON.push(objetoPaciente);
+            }
+            return registrosJSON;
         }
 
         function mostrarStatus(show, text = "") {
@@ -291,21 +335,18 @@
 
         function renderizarResultado(datos, archivo) {
             document.getElementById('areaImpresion').classList.remove('hidden');
-            document.getElementById('origenArchivo').innerText = "Archivo fuente: " + archivo;
+            document.getElementById('origenArchivo').innerText = "Fuente: " + archivo;
 
-            document.getElementById('resNombre').innerText = datos['Nombre del Niño'] || datos['Nombre'] || '-';
+            document.getElementById('resNombre').innerText = datos['Nombre del Niño'] || '-';
             document.getElementById('resDNI').innerText = datos['DNI'] || '-';
-            
-            const rawFecha = datos['Fecha Nac.'] || datos['Fecha Nacimiento'];
-            document.getElementById('resFechaNac').innerText = formatearFechaExcel(rawFecha);
-            document.getElementById('resEdad').innerText = calcularEdadExacta(rawFecha);
+            document.getElementById('resFechaNac').innerText = formatearFechaExcel(datos['Fecha Nac.']);
+            document.getElementById('resEdad').innerText = calcularEdadExacta(datos['Fecha Nac.']);
 
-            // 1. Cargar Controles CRED
+            // 1. Inyectar Controles CRED
             const credBody = document.getElementById('credTableBody');
             credBody.innerHTML = '';
             MAPEO_CRED.forEach(fila => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition-colors";
                 tr.innerHTML = `
                     <td class="px-3 py-2 text-left bg-slate-50 font-bold border-r border-slate-200">${fila.etapa}</td>
                     <td class="px-1 py-2 border-r border-slate-200">${datos[fila.n1] || (fila.n1 ? '-' : '')}</td>
@@ -319,42 +360,48 @@
                 credBody.appendChild(tr);
             });
 
-            // 2. Cargar Suplementación de Hierro (Dinámico)
+            // 2. Inyectar Suplementación con Hierro
             const hierroBody = document.getElementById('hierroTableBody');
             hierroBody.innerHTML = '';
             MAPEO_HIERRO.forEach(item => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50";
-                // Buscamos coincidencia exacta de columna
-                const valor = datos[item.columna] || datos[item.columna.toUpperCase()] || '-';
                 tr.innerHTML = `
                     <td class="px-3 py-2 font-semibold bg-slate-50 border-r border-slate-200">${item.edad}</td>
-                    <td class="px-3 py-2 text-center">${formatearFechaExcel(valor)}</td>
+                    <td class="px-3 py-2 text-center">${formatearFechaExcel(datos[item.columna])}</td>
                 `;
                 hierroBody.appendChild(tr);
             });
 
-            // 3. Cargar Dosajes de Hemoglobina (Dinámico)
+            // 3. Inyectar Dosajes de Hemoglobina
             const hbBody = document.getElementById('hbTableBody');
             hbBody.innerHTML = '';
             MAPEO_HB.forEach(item => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50";
-                const valor = datos[item.columna] || '-';
                 tr.innerHTML = `
                     <td class="px-3 py-2 font-semibold bg-slate-50 border-r border-slate-200">${item.edad}</td>
-                    <td class="px-3 py-2 text-center font-bold text-slate-900">${valor}</td>
+                    <td class="px-3 py-2 text-center font-bold text-slate-900">${datos[item.columna] || '-'}</td>
                 `;
                 hbBody.appendChild(tr);
             });
 
-            // 4. Cargar Inmunizaciones
+            // 4. Inyectar Esquema de Vacunación Ordenado por Grupo de Edad
             const vacunasBody = document.getElementById('vacunasTableBody');
             vacunasBody.innerHTML = '';
-            MAPEO_VACUNAS.forEach(fila => {
+            
+            let ultimoGrupo = "";
+            ESQUEMA_VACUNAS_GRUPOS.forEach(fila => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50";
+                
+                // Generar celda combinada de grupo de edad si cambia de categoría
+                let celdaGrupo = "";
+                if (fila.grupo !== ultimoGrupo) {
+                    const totalFilasGrupo = ESQUEMA_VACUNAS_GRUPOS.filter(v => v.grupo === fila.grupo).length;
+                    celdaGrupo = `<td rowspan="${totalFilasGrupo}" class="px-2 py-2 text-left bg-blue-50/60 font-black text-blue-900 border-r border-slate-200 uppercase tracking-wider align-middle w-24">${fila.grupo}</td>`;
+                    ultimoGrupo = fila.grupo;
+                }
+
                 tr.innerHTML = `
+                    ${celdaGrupo}
                     <td class="px-3 py-2 text-left bg-slate-50 font-bold border-r border-slate-200">${fila.nombre}</td>
                     <td class="px-2 py-2 border-r border-slate-200 ${fila.unica ? '' : 'bg-slate-100/70 text-slate-400'}">${datos[fila.unica] || (fila.unica ? '-' : '')}</td>
                     <td class="px-2 py-2 border-r border-slate-200 ${fila.d1 ? '' : 'bg-slate-100/70 text-slate-400'}">${datos[fila.d1] || (fila.d1 ? '-' : '')}</td>
@@ -365,21 +412,16 @@
             });
         }
 
-        // FUNCIÓN CLAVE: EXPORTACIÓN EN ALTA CALIDAD A PDF
         function exportarAPDF() {
             const elemento = document.getElementById('areaImpresion');
-            const dniArchivo = document.getElementById('resDNI').innerText || 'Control';
-            
-            // Configuración estética del PDF de salida
+            const dniArchivo = document.getElementById('resDNI').innerText || 'Ficha';
             const opciones = {
-                margin:       [10, 10, 10, 10], 
+                margin:       [8, 8, 8, 8], 
                 filename:     `Ficha_CRED_DNI_${dniArchivo}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, letterRendering: true }, // Escala 2 previene la pixelación
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' } // Formato vertical A4 estándar clínico
+                image:        { type: 'jpeg', quality: 0.99 },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
-
-            // Ejecutar conversión
             html2pdf().set(opciones).from(elemento).save();
         }
     </script>
