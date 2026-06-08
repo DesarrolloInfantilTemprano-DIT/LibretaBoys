@@ -336,7 +336,7 @@
                 
                 // CASO 1: No registra cita o viene vacío/indefinido
                 if (!resJson || !resJson.fechaCitaCred || String(resJson.fechaCitaCred).trim() === "" || resJson.fechaCitaCred === "undefined" || resJson.fechaCitaCred === "-") {
-                    lblTexto.innerText = "📅 INASISTENTE";
+                    lblTexto.innerText = "📅 NO RESERVÓ CITA CRED";
                     badge.classList.add('bg-amber-100', 'border-amber-300', 'text-amber-800');
                     return;
                 }
