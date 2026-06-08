@@ -259,7 +259,7 @@
 
         const ESQUEMA_VACUNAS_GRUPOS = [
             { grupo: "MENOR DE 1 AÑO", nombre: "PENTAVALENTE", unica: "GRIS", d1: "M", d2: "T", d3: "AC" },
-            { group: "MENOR DE 1 AÑO", nombre: "IPV", unica: "GRIS", d1: "N", d2: "U", d3: "AD" },
+            { grupo: "MENOR DE 1 AÑO", nombre: "IPV", unica: "GRIS", d1: "N", d2: "U", d3: "AD" }, // Corregido: "grupo" en vez de "group"
             { grupo: "MENOR DE 1 AÑO", nombre: "ROTAVIRUS", unica: "GRIS", d1: "O", d2: "V", d3: "GRIS" },
             { grupo: "MENOR DE 1 AÑO", nombre: "NEUMOCOCO", unica: "GRIS", d1: "P", d2: "W", d3: "GRIS" },
             
@@ -268,7 +268,7 @@
             { grupo: "1 AÑO", nombre: "VARICELA", unica: "AT", d1: "GRIS", d2: "GRIS", d3: "GRIS" },
             { grupo: "1 AÑO", nombre: "ANTI-FIEBRE AMARILLA (AMA)", unica: "AV", d1: "GRIS", d2: "GRIS", d3: "GRIS" },
             { grupo: "1 AÑO", nombre: "HEPATITIS A", unica: "AW", d1: "GRIS", d2: "GRIS", d3: "GRIS" },
-            { grupo: "1 AÑO", nombre: "DPT", unica: "AB", d1: "GRIS", d2: "GRIS", d3: "GRIS" },
+            { grupo: "1 AÑO", font: "", nombre: "DPT", unica: "AB", d1: "GRIS", d2: "GRIS", d3: "GRIS" },
             { grupo: "1 AÑO", nombre: "REFUERZO POLIO", unica: "BB", d1: "GRIS", d2: "GRIS", d3: "GRIS" },
             
             { grupo: "4 AÑOS", nombre: "DPT", unica: "BR", d1: "GRIS", d2: "GRIS", d3: "GRIS" },
@@ -318,7 +318,6 @@
             const lblTexto = document.getElementById('lblTextoCita');
             const lblFecha = document.getElementById('lblFechaCitaCred');
             
-            // Reestablecer clases limpias base
             badge.className = "hidden px-4 py-2 rounded-xl text-xs font-black tracking-wide border transition-all flex items-center gap-1.5 shadow-sm";
             lblFecha.innerText = "";
 
@@ -327,7 +326,6 @@
                 badge.classList.remove('hidden');
 
                 if (!response.ok) {
-                    // Si falla el servidor, asumimos por seguridad que no se encuentra cita
                     lblTexto.innerText = "📅 INASISTENTE";
                     badge.classList.add('bg-amber-100', 'border-amber-300', 'text-amber-800');
                     return;
@@ -335,14 +333,12 @@
                 
                 const resJson = await response.json();
                 
-                // CASO 1: No registra cita o viene vacío/indefinido
                 if (!resJson || !resJson.fechaCitaCred || String(resJson.fechaCitaCred).trim() === "" || resJson.fechaCitaCred === "undefined" || resJson.fechaCitaCred === "-") {
                     lblTexto.innerText = "📅 NO RESERVÓ CITA CRED";
                     badge.classList.add('bg-amber-100', 'border-amber-300', 'text-amber-800');
                     return;
                 }
 
-                // Si trae una fecha válida, la procesamos
                 const fechaString = resJson.fechaCitaCred;
                 let partes = fechaString.includes('/') ? fechaString.split('/') : fechaString.split('-');
                 let fechaCita;
@@ -358,18 +354,15 @@
                 fechaCita.setHours(0, 0, 0, 0);
 
                 if (fechaCita < hoy) {
-                    // CASO 2: La cita ya pasó de la fecha (Inasistente desde el...)
                     lblTexto.innerText = `📅 INASISTENTE desde el ${fechaString}`;
                     badge.classList.add('bg-rose-100', 'border-rose-400', 'text-rose-700', 'alerta-vencida');
                 } else {
-                    // CASO 3: Tiene cita futura o vigente normal
                     lblTexto.innerText = "📅 CITA CRED:";
                     lblFecha.innerText = fechaString;
                     badge.classList.add('bg-emerald-50', 'border-emerald-300', 'text-emerald-700');
                 }
             } catch (err) {
                 console.error("Error al obtener la cita CRED:", err);
-                // Manejo de error de red local
                 lblTexto.innerText = "📅 INASISTENTE";
                 badge.classList.add('bg-amber-100', 'border-amber-300', 'text-amber-800');
                 badge.classList.remove('hidden');
@@ -386,13 +379,9 @@
             document.getElementById('casitaNotice').classList.add('hidden');
             document.getElementById('badgeCitaCred').classList.add('hidden');
             
-            // MEJORA SOLICITADA: Mensaje limpio de validación de datos
             mostrarStatus(true, "Espere mientras se valida sus datos");
 
             try {
-                // =========================================================================
-                // FASE 1: VALIDACIÓN OBLIGATORIA CON EL GOOGLE SCRIPT DEL MAPA
-                // =========================================================================
                 const resScript = await fetch(`${GOOGLE_SCRIPT_URL}?dni=${dniBuscado}`);
                 const scriptData = await resScript.json();
 
@@ -404,9 +393,6 @@
                     return; 
                 }
 
-                // =========================================================================
-                // FASE 2: EL NIÑO EXISTE EN EL MAPA -> BUSCAR EN GITHUB
-                // =========================================================================
                 mostrarStatus(true, "Buscando expediente e historial clínico completo...");
                 
                 consultarFechaCitaCred(dniBuscado);
