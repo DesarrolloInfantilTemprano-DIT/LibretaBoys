@@ -69,6 +69,15 @@
         </div>
     </div>
 
+    <div id="casitaNotice" class="w-full max-w-5xl bg-rose-50 border border-rose-200 rounded-2xl p-6 mb-5 hidden no-print text-center shadow-lg shadow-rose-100/40">
+        <div class="text-4xl mb-3">🏡📍</div>
+        <h3 class="text-xl font-bold text-rose-800 mb-2">¡Atención Papita / Mamita!</h3>
+        <p id="casitaMessage" class="text-sm text-rose-700 max-w-2xl mx-auto mb-4 leading-relaxed"></p>
+        <a id="casitaLink" href="#" target="_blank" class="inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-black px-6 py-3 rounded-xl shadow transition-all transform active:scale-95 text-sm">
+            🚀 Registrar desde mi Casita aquí
+        </a>
+    </div>
+
     <div id="areaImpresion" class="w-full max-w-5xl bg-white rounded-3xl shadow-xl shadow-slate-100 p-6 sm:p-8 hidden border border-slate-100 print-container">
         
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-4 border-dotted border-slate-100 pb-5 mb-6 gap-3">
@@ -80,7 +89,7 @@
             </div>
             <div class="flex items-center gap-2 no-print">
                 <button onclick="exportarAPDF()" class="bg-rose-500 hover:bg-rose-600 text-white text-xs font-black px-5 py-2.5 rounded-xl shadow transition-all duration-150 cursor-pointer transform active:scale-95 flex items-center gap-1">
-                     🖨️ Descargar en DF
+                     🖨️ Descargar en PDF
                 </button>
             </div>
         </div>
@@ -194,6 +203,9 @@
         const GITHUB_USER = "DesarrolloInfantilTemprano-DIT";
         const GITHUB_REPO = "LibretaBoys";
         const CARPETA_EXCELS = "ExcelBoys"; 
+        
+        // URL de tu Google Apps Script de validación - url de MAPA GOOGLE
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFJPWYyiVo1d5lJnG6LtRRkCp6pOyvfvMbApsa1GWTr02m4b2NLLvV7XyKOIyPVVcCmg/exec";
 
         // CONFIGURACIÓN DE CRITERIOS CRED
         const MAPEO_CRED = [
@@ -216,12 +228,12 @@
             { edad: "11 MESES", col: "AO" }
         ];
 
-        // CONFIGURACIÓN DE HEMOGLOBINA (Corrección de lista y 1a 3m Habilitado)
+        // CONFIGURACIÓN DE HEMOGLOBINA
         const MAPEO_HB = [
             { edad: "6 MESES", col: "AB" },
             { edad: "9 MESES", col: "AK" },
             { edad: "1 AÑO", col: "AQ" },
-            { edad: "1 AÑO Y 3 MESES", col: "GRIS_SOLO_AQUÍ_SE_DEBE_MODIFICAR" }, // CAMBIAR ESTA COLUMNA SEGÚN TU EXCEL
+            { edad: "1 AÑO Y 3 MESES", col: "GRIS_SOLO_AQUÍ_SE_DEBE_MODIFICAR" }, 
             { edad: "1 AÑO Y 6 MESES", col: "AZ" },
             { edad: "2 AÑOS", col: "BG" },
             { edad: "3 AÑOS", col: "BL" },
@@ -232,7 +244,7 @@
         const ESQUEMA_VACUNAS_GRUPOS = [
             { grupo: "MENOR DE 1 AÑO", nombre: "PENTAVALENTE", unica: "GRIS", d1: "M", d2: "T", d3: "AC" },
             { grupo: "MENOR DE 1 AÑO", nombre: "IPV", unica: "GRIS", d1: "N", d2: "U", d3: "AD" },
-            { grupo: "MENOR DE 1 AÑO", nombre: "ROVATIRUS", unica: "GRIS", d1: "O", d2: "V", d3: "GRIS" },
+            { group: "MENOR DE 1 AÑO", nombre: "ROVATIRUS", unica: "GRIS", d1: "O", d2: "V", d3: "GRIS" },
             { grupo: "MENOR DE 1 AÑO", nombre: "NEUMOCOCO", unica: "GRIS", d1: "P", d2: "W", d3: "GRIS" },
             
             { grupo: "1 AÑO", nombre: "NEUMOCOCO: 1 año", unica: "AR", d1: "GRIS", d2: "GRIS", d3: "GRIS" },
@@ -275,7 +287,6 @@
             if (llaveMapeo === "GRIS" || !llaveMapeo) {
                 return `<td class="bg-slate-800 border-r border-slate-100"></td>`;
             }
-            // MODIFICACIÓN: Si la llave mapea a '1 AÑO Y 3 MESES', se debe habilitar y no mostrar gris
             if (llaveMapeo === "1 AÑO Y 3 MESES") {
                 return `<td class="px-1 py-2 border-r border-slate-100 bg-white font-black text-slate-800">${formatearValorCelda(filaObjeto[llaveMapeo])}</td>`;
             }
@@ -288,12 +299,14 @@
 
             document.getElementById('areaImpresion').classList.add('hidden');
             document.getElementById('noResult').classList.add('hidden');
+            document.getElementById('casitaNotice').classList.add('hidden');
             mostrarStatus(true, "Analizando expedientes clínicos...");
 
             try {
+                // FASE 1: Buscar en los archivos Excel alojados en GitHub
                 let urlAPI = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${CARPETA_EXCELS}`;
                 const response = await fetch(urlAPI);
-                if (!response.ok) throw new Error("Fallo de red.");
+                if (!response.ok) throw new Error("Fallo de red al conectar con GitHub.");
 
                 const archivos = await response.json();
                 const archivosExcel = archivos.filter(file => file.name.endsWith('.xlsx'));
@@ -314,15 +327,44 @@
                     if (niñoEncontrado) break;
                 }
 
-                mostrarStatus(false);
+                // FASE 2: Si se halló en GitHub, renderizarlo inmediatamente
                 if (niñoEncontrado) {
+                    mostrarStatus(false);
                     renderizarResultado(niñoEncontrado);
-                } else {
-                    document.getElementById('noResult').classList.remove('hidden');
+                } 
+                // FASE 3: Si NO está en GitHub, consultar al Google Apps Script
+                else {
+                    mostrarStatus(true, "Consultando base de datos complementaria...");
+                    
+                    const resScript = await fetch(`${GOOGLE_SCRIPT_URL}?dni=${dniBuscado}`);
+                    const scriptData = await resScript.json();
+                    
+                    mostrarStatus(false);
+
+                    // Si el Apps Script responde con la bandera NOT_FOUND ejecutamos la detención con aviso elegante
+                    if (scriptData.error && scriptData.status === "NOT_FOUND") {
+                        document.getElementById('casitaMessage').innerText = scriptData.mensaje;
+                        document.getElementById('casitaLink').href = scriptData.enlace;
+                        document.getElementById('casitaNotice').classList.remove('hidden');
+                    } 
+                    // En caso de que el script sí devuelva la fila (estructura array nativa del doGet original)
+                    else if (Array.isArray(scriptData) && scriptData.length > 0) {
+                        const regScript = scriptData[0];
+                        // Adaptamos el objeto plano JSON del script a la nomenclatura de renderizado de columnas
+                        const filaAdaptada = {
+                            'C': regScript.nombreHijo,
+                            'D': regScript.dniHijo,
+                            'E': regScript.nacimientoHijo
+                        };
+                        renderizarResultado(filaAdaptada);
+                    } 
+                    else {
+                        document.getElementById('noResult').classList.remove('hidden');
+                    }
                 }
             } catch (error) {
                 mostrarStatus(false);
-                alert("Error: " + error.message);
+                alert("Error durante la consulta: " + error.message);
             }
         }
 
@@ -378,12 +420,11 @@
                 hierroBody.appendChild(tr);
             });
 
-            // 3. Renderizar Hemoglobina con Controles Habilitados Correctamente
+            // 3. Renderizar Hemoglobina
             const hbBody = document.getElementById('hbTableBody');
             hbBody.innerHTML = '';
             MAPEO_HB.forEach(m => {
                 const tr = document.createElement('tr');
-                // MODIFICACIÓN: Si mapea a '1 AÑO Y 3 MESES', se renderiza normal, no gris
                 if (m.col === "GRIS") {
                     tr.innerHTML = `
                         <td class="px-3 py-2 font-bold bg-slate-50 border-r border-slate-200 text-slate-700">${m.edad}</td>
