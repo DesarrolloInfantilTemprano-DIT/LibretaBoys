@@ -219,7 +219,7 @@
         const GITHUB_REPO = "LibretaBoys";
         const CARPETA_EXCELS = "ExcelBoys"; 
         
-        // URLs de tus dos Google Apps Mapa y Citas Scripts organizados
+        // URLs de tus dos Google Apps Mapa y citas Scripts organizados
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFJPWYyiVo1d5lJnG6LtRRkCp6pOyvfvMbApsa1GWTr02m4b2NLLvV7XyKOIyPVVcCmg/exec";
         const SCRIPT_CITAS_URL = "https://script.google.com/macros/s/AKfycbw-pQY4dzdyJ3wFLR2mW5MSbgphIuSdiD6sY8tcOo5IbwWBlqOx03jcGw0ENLRb1FZFMg/exec";
 
@@ -309,12 +309,10 @@
             return `<td class="px-1 py-2 border-r border-slate-100 bg-white">${formatearValorCelda(filaObjeto[llaveMapeo])}</td>`;
         }
 
-        // LÓGICA DE CONSULTA ADICIONAL PARA LA FECHA DE CITA CRED
         async function consultarFechaCitaCred(dni) {
             const badge = document.getElementById('badgeCitaCred');
             const lblFecha = document.getElementById('lblFechaCitaCred');
             
-            // Limpieza visual inicial
             badge.className = "hidden px-4 py-2 rounded-xl text-xs font-black tracking-wide border transition-all flex items-center gap-1.5 shadow-sm";
             lblFecha.innerText = "--/--/----";
 
@@ -328,15 +326,12 @@
                     lblFecha.innerText = resJson.fechaCitaCred;
                     badge.classList.remove('hidden');
 
-                    // Procesar la fecha (Formatos esperados: DD/MM/YYYY o YYYY-MM-DD)
                     let partes = resJson.fechaCitaCred.includes('/') ? resJson.fechaCitaCred.split('/') : resJson.fechaCitaCred.split('-');
                     let fechaCita;
                     
                     if (resJson.fechaCitaCred.includes('/')) {
-                        // DD/MM/YYYY
                         fechaCita = new Date(partes[2], partes[1] - 1, partes[0]);
                     } else {
-                        // YYYY-MM-DD
                         fechaCita = new Date(partes[0], partes[1] - 1, partes[2]);
                     }
 
@@ -344,18 +339,16 @@
                     hoy.setHours(0, 0, 0, 0);
                     fechaCita.setHours(0, 0, 0, 0);
 
-                    // Si la fecha de la cita es menor a hoy (ya pasó) se activa la alerta roja
                     if (fechaCita < hoy) {
                         badge.classList.add('bg-rose-100', 'border-rose-400', 'text-rose-700', 'alerta-vencida');
                         badge.title = "⚠️ ¡ALERTA! Esta cita ya expiró u ocurrió en el pasado.";
                     } else {
-                        // Cita normal o futura
                         badge.classList.add('bg-emerald-50', 'border-emerald-300', 'text-emerald-700');
                         badge.title = "Cita programada activa.";
                     }
                 }
             } catch (err) {
-                console.error("Error al obtener la cita CRED del segundo script:", err);
+                console.error("Error al obtener la cita CRED:", err);
             }
         }
 
@@ -363,73 +356,82 @@
             const dniBuscado = document.getElementById('dniInput').value.trim();
             if (!dniBuscado) { alert("Por favor, escribe un DNI válido."); return; }
 
+            // Limpieza y reseteo total de vistas previas
             document.getElementById('areaImpresion').classList.add('hidden');
             document.getElementById('noResult').classList.add('hidden');
             document.getElementById('casitaNotice').classList.add('hidden');
             document.getElementById('badgeCitaCred').classList.add('hidden');
-            mostrarStatus(true, "Analizando expedientes clínicos...");
+            
+            mostrarStatus(true, "Validando registro en sistema de mapas...");
 
             try {
-                // Consultar la cita CRED en paralelo sin retrasar la carga principal
+                // =========================================================================
+                // FASE 1: VALIDACIÓN OBLIGATORIA CON EL GOOGLE SCRIPT DEL MAPA
+                // =========================================================================
+                const resScript = await fetch(`${GOOGLE_SCRIPT_URL}?dni=${dniBuscado}`);
+                const scriptData = await resScript.json();
+
+                // Si el script reporta que NO se encuentra registrado en el mapa, detenemos todo aquí.
+                if (scriptData.error && scriptData.status === "NOT_FOUND") {
+                    mostrarStatus(false);
+                    document.getElementById('casitaMessage').innerText = scriptData.mensaje;
+                    document.getElementById('casitaLink').href = scriptData.enlace;
+                    document.getElementById('casitaNotice').classList.remove('hidden');
+                    return; // Fin de la ejecución. No busca en GitHub ni renderiza nada.
+                }
+
+                // =========================================================================
+                // FASE 2: EL NIÑO EXISTE EN EL MAPA, PROCESAR CONSULTA DE CITAS Y EXCEL
+                // =========================================================================
+                mostrarStatus(true, "Buscando expediente e historial clínico...");
+                
+                // Disparamos la consulta de citas en paralelo
                 consultarFechaCitaCred(dniBuscado);
 
-                // FASE 1: Buscar en los archivos Excel alojados en GitHub
-                let urlAPI = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${CARPETA_EXCELS}`;
-                const response = await fetch(urlAPI);
-                if (!response.ok) throw new Error("Fallo de red al conectar con GitHub.");
-
-                const archivos = await response.json();
-                const archivosExcel = archivos.filter(file => file.name.endsWith('.xlsx'));
-
+                // Verificamos si el mismo script del mapa ya traía la fila nativa adaptada
                 let niñoEncontrado = null;
 
-                for (const archivo of archivosExcel) {
-                    const resExcel = await fetch(archivo.download_url);
-                    const arrayBuffer = await resExcel.arrayBuffer();
-                    const data = new Uint8Array(arrayBuffer);
-                    
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                    
-                    const listaNiños = XLSX.utils.sheet_to_json(worksheet, { header: "A", defval: "-" });
-                    niñoEncontrado = listaNiños.find(fila => String(fila['D']).trim() === dniBuscado);
+                if (Array.isArray(scriptData) && scriptData.length > 0) {
+                    const regScript = scriptData[0];
+                    niñoEncontrado = {
+                        'C': regScript.nombreHijo,
+                        'D': regScript.dniHijo,
+                        'E': regScript.nacimientoHijo
+                    };
+                } else {
+                    // Si el script del mapa dio OK pero no devolvió la estructura completa, buscamos en los Excel de GitHub
+                    let urlAPI = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${CARPETA_EXCELS}`;
+                    const response = await fetch(urlAPI);
+                    if (!response.ok) throw new Error("Fallo de red al conectar con GitHub.");
 
-                    if (niñoEncontrado) break;
-                }
+                    const archivos = await response.json();
+                    const archivosExcel = archivos.filter(file => file.name.endsWith('.xlsx'));
 
-                // FASE 2: Si se halló en GitHub, renderizarlo inmediatamente
-                if (niñoEncontrado) {
-                    mostrarStatus(false);
-                    renderizarResultado(niñoEncontrado);
-                } 
-                // FASE 3: Si NO está en GitHub, consultar al Google Apps Script
-                else {
-                    mostrarStatus(true, "Consultando base de datos complementaria...");
-                    
-                    const resScript = await fetch(`${GOOGLE_SCRIPT_URL}?dni=${dniBuscado}`);
-                    const scriptData = await resScript.json();
-                    
-                    mostrarStatus(false);
+                    for (const archivo of archivosExcel) {
+                        const resExcel = await fetch(archivo.download_url);
+                        const arrayBuffer = await resExcel.arrayBuffer();
+                        const data = new Uint8Array(arrayBuffer);
+                        
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                        
+                        const listaNiños = XLSX.utils.sheet_to_json(worksheet, { header: "A", defval: "-" });
+                        niñoEncontrado = listaNiños.find(fila => String(fila['D']).trim() === dniBuscado);
 
-                    if (scriptData.error && scriptData.status === "NOT_FOUND") {
-                        document.getElementById('casitaMessage').innerText = scriptData.mensaje;
-                        document.getElementById('casitaLink').href = scriptData.enlace;
-                        document.getElementById('casitaNotice').classList.remove('hidden');
-                    } 
-                    else if (Array.isArray(scriptData) && scriptData.length > 0) {
-                        const regScript = scriptData[0];
-                        const filaAdaptada = {
-                            'C': regScript.nombreHijo,
-                            'D': regScript.dniHijo,
-                            'E': regScript.nacimientoHijo
-                        };
-                        renderizarResultado(filaAdaptada);
-                    } 
-                    else {
-                        document.getElementById('noResult').classList.remove('hidden');
-                        document.getElementById('badgeCitaCred').classList.add('hidden');
+                        if (niñoEncontrado) break;
                     }
                 }
+
+                // Ocultar mensaje de carga
+                mostrarStatus(false);
+
+                // Si encontramos los datos de su libreta, renderizamos. Si no, alerta de error.
+                if (niñoEncontrado) {
+                    renderizarResultado(niñoEncontrado);
+                } else {
+                    document.getElementById('noResult').classList.remove('hidden');
+                }
+
             } catch (error) {
                 mostrarStatus(false);
                 alert("Error durante la consulta: " + error.message);
