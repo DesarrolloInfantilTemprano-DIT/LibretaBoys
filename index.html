@@ -214,10 +214,10 @@
     <div id="noResult" class="hidden flex-col items-center justify-center gap-4 text-center py-8 px-6 text-rose-500 font-bold bg-white max-w-5xl w-full rounded-2xl shadow border border-rose-100 mt-4">
         <div>
             Alerta: Sus datos aún no estan en el Padrón - Castillo Grande - <br class="hidden sm:inline"> 
-            Escribir al WhatsApp de la Lic. Carmen 940278529
+            Escribir al WhatsApp
         </div>
         <a id="btnWhatsApp" href="#" target="_blank" class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black px-6 py-3 rounded-xl shadow transition-all transform active:scale-95 text-sm cursor-pointer no-print">
-            💬 Enviar Mensaje a Lic. Carmen
+            💬 Enviar Mensaje
         </a>
     </div>
 
@@ -404,7 +404,7 @@
                     return; 
                 }
 
-                mostrarStatus(true, "Buscando expediente e historial clínico completo...");
+                mostrarStatus(true, "...ya casi");
                 
                 consultarFechaCitaCred(dniBuscado);
 
@@ -412,7 +412,7 @@
 
                 let urlAPI = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${CARPETA_EXCELS}`;
                 const response = await fetch(urlAPI);
-                if (!response.ok) throw new Error("Fallo de red al conectar con GitHub.");
+                if (!response.ok) throw new Error("Fallo de red al conectar con BD");
 
                 const archivos = await response.json();
                 const archivosExcel = archivos.filter(file => file.name.endsWith('.xlsx'));
