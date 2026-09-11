@@ -15,7 +15,6 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Animación de pulso para alerta de niño INASISTENTE con cita vencida */
         @keyframes pulsoAlerta {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
             70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
@@ -25,7 +24,6 @@
             animation: pulsoAlerta 2s infinite;
         }
         
-        /* ESTILOS DE IMPRESIÓN LIMPIOS */
         @media print {
             .no-print { 
                 display: none !important; 
@@ -221,10 +219,9 @@
     </div>
 
     <script>
-        // URLs de las 3 Apps Script de Google
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFJPWYyiVo1d5lJnG6LtRRkCp6pOyvfvMbApsa1GWTr02m4b2NLLvV7XyKOIyPVVcCmg/exec";
         const SCRIPT_CITAS_URL = "https://script.google.com/macros/s/AKfycbzIcCvRp2RzrpiwVQj0I2px-uS5gGNgXlUOVhJv9Nkbzb6GqYOM0HO3a9FhQBnMIwRepA/exec";
-        const SCRIPT_ATENCIONES_URL = "https://script.google.com/macros/s/AKfycbwuOlgJTW1vMZG2KUE8WgdhUtvix2Ii8ljrXvuHC26Fs9GsqtKbAeuWbXjdEM7JF_0M/exec";
+        const SCRIPT_ATENCIONES_URL = "https://script.google.com/macros/s/AKfycbzB3MjDXENg2euZ6Lr_uqHbhFg9kHNwVAaTmLXHeu2PxW29KjmOmVivQgpnjhV9m08A/exec";
 
         const MAPEO_CRED = [
             { etapa: "RECIEN NACIDO", n1: "G", n2: "H", n3: "I", n4: "GRIS", n5: "GRIS", n6: "GRIS", n7: "GRIS" },
@@ -325,7 +322,7 @@
             lblFecha.innerText = "";
 
             try {
-                const response = await fetch(`${SCRIPT_CITAS_URL}?dni=${dni}`);
+                const response = await fetch(`${SCRIPT_CITAS_URL}?dni=${dni}`, { redirect: "follow" });
                 badge.classList.remove('hidden');
 
                 if (!response.ok) {
@@ -379,7 +376,6 @@
 
             document.getElementById('areaImpresion').classList.add('hidden');
             
-            // Se limpian los estilos flex asignados dinámicamente a noResult
             const contenedorNoResult = document.getElementById('noResult');
             contenedorNoResult.classList.add('hidden');
             contenedorNoResult.classList.remove('flex');
@@ -390,7 +386,7 @@
             mostrarStatus(true, "Espere mientras se valida sus datos");
 
             try {
-                const resScript = await fetch(`${GOOGLE_SCRIPT_URL}?dni=${dniBuscado}`);
+                const resScript = await fetch(`${GOOGLE_SCRIPT_URL}?dni=${dniBuscado}`, { redirect: "follow" });
                 const scriptData = await resScript.json();
 
                 if (scriptData.error && scriptData.status === "NOT_FOUND") {
@@ -405,30 +401,27 @@
                 
                 consultarFechaCitaCred(dniBuscado);
 
-                // Consulta a la nueva URL de Google Apps Script para atenciones
-                const resAtenciones = await fetch(`${SCRIPT_ATENCIONES_URL}?dni=${dniBuscado}`);
-                if (!resAtenciones.ok) throw new Error("Fallo al conectar con el servicio de atenciones");
+                // Consulta segura con seguimiento explícito de redirecciones HTTP 302
+                const resAtenciones = await fetch(`${SCRIPT_ATENCIONES_URL}?dni=${dniBuscado}`, { redirect: "follow" });
+                if (!resAtenciones.ok) throw new Error("Servidor no disponible");
 
                 const dataAtenciones = await resAtenciones.json();
 
                 mostrarStatus(false);
 
-                // Validamos si la respuesta trajo información o error de no encontrado
                 if (dataAtenciones && !dataAtenciones.error) {
                     renderizarResultado(dataAtenciones);
                 } else {
-                    // Configuración automática del texto predefinido para WhatsApp
                     const mensajeWA = encodeURIComponent(`Hola Lic. Carmen, buenas tardes. Consulté el DNI ${dniBuscado} en la Libreta Digital CRED y me sale que aún no está en el Padrón de Castillo Grande. Por favor, me podría apoyar con el registro?`);
                     document.getElementById('btnWhatsApp').href = `https://wa.me/51940278529?text=${mensajeWA}`;
                     
-                    // Activación de la visualización fluida de la alerta
                     contenedorNoResult.classList.remove('hidden');
                     contenedorNoResult.classList.add('flex');
                 }
 
             } catch (error) {
                 mostrarStatus(false);
-                alert("Error durante la consulta: " + error.message);
+                alert("Fallo de red al conectar con BD: " + error.message);
             }
         }
 
@@ -447,7 +440,7 @@
             document.getElementById('resFechaNac').innerText = formatearValorCelda(fila['E']);
             document.getElementById('resEdad').innerText = calcularEdadExacta(fila['E']);
 
-            // 1. Renderizar CRED
+            // 1. CRED
             const credBody = document.getElementById('credTableBody');
             credBody.innerHTML = '';
             MAPEO_CRED.forEach(m => {
@@ -467,7 +460,7 @@
                 credBody.appendChild(tr);
             });
 
-            // 2. Renderizar Hierro
+            // 2. Hierro
             const hierroBody = document.getElementById('hierroTableBody');
             hierroBody.innerHTML = '';
             MAPEO_HIERRO.forEach(m => {
@@ -479,7 +472,7 @@
                 hierroBody.appendChild(tr);
             });
 
-            // 3. Renderizar Hemoglobina
+            // 3. Hemoglobina
             const hbBody = document.getElementById('hbTableBody');
             hbBody.innerHTML = '';
             MAPEO_HB.forEach(m => {
@@ -498,7 +491,7 @@
                 hbBody.appendChild(tr);
             });
 
-            // 4. Renderizar Vacunas
+            // 4. Vacunas
             const vacunasBody = document.getElementById('vacunasTableBody');
             vacunasBody.innerHTML = '';
             
