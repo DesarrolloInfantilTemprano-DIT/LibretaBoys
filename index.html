@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Libreta de Control Digital CRED</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         .loader {
             border-top-color: #f43f5e;
@@ -222,12 +221,10 @@
     </div>
 
     <script>
-        const GITHUB_USER = "DesarrolloInfantilTemprano-DIT";
-        const GITHUB_REPO = "LibretaBoys";
-        const CARPETA_EXCELS = "ExcelBoys"; 
-        
+        // URLs de las 3 Apps Script de Google
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFJPWYyiVo1d5lJnG6LtRRkCp6pOyvfvMbApsa1GWTr02m4b2NLLvV7XyKOIyPVVcCmg/exec";
         const SCRIPT_CITAS_URL = "https://script.google.com/macros/s/AKfycbzIcCvRp2RzrpiwVQj0I2px-uS5gGNgXlUOVhJv9Nkbzb6GqYOM0HO3a9FhQBnMIwRepA/exec";
+        const SCRIPT_ATENCIONES_URL = "https://script.google.com/macros/s/AKfycbyxxai9r1t9vNC8fo2Hcl6pjLkyqmL2e_qRRv3BTF5RphnVUsbXvp7d7c88nPfSK15Q/exec";
 
         const MAPEO_CRED = [
             { etapa: "RECIEN NACIDO", n1: "G", n2: "H", n3: "I", n4: "GRIS", n5: "GRIS", n6: "GRIS", n7: "GRIS" },
@@ -408,33 +405,17 @@
                 
                 consultarFechaCitaCred(dniBuscado);
 
-                let niñoEncontrado = null;
+                // Consulta a la nueva URL de Google Apps Script para atenciones
+                const resAtenciones = await fetch(`${SCRIPT_ATENCIONES_URL}?dni=${dniBuscado}`);
+                if (!resAtenciones.ok) throw new Error("Fallo al conectar con el servicio de atenciones");
 
-                let urlAPI = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${CARPETA_EXCELS}`;
-                const response = await fetch(urlAPI);
-                if (!response.ok) throw new Error("Fallo de red al conectar con BD");
-
-                const archivos = await response.json();
-                const archivosExcel = archivos.filter(file => file.name.endsWith('.xlsx'));
-
-                for (const archivo of archivosExcel) {
-                    const resExcel = await fetch(archivo.download_url);
-                    const arrayBuffer = await resExcel.arrayBuffer();
-                    const data = new Uint8Array(arrayBuffer);
-                    
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                    
-                    const listaNiños = XLSX.utils.sheet_to_json(worksheet, { header: "A", defval: "-" });
-                    niñoEncontrado = listaNiños.find(fila => String(fila['D']).trim() === dniBuscado);
-
-                    if (niñoEncontrado) break;
-                }
+                const dataAtenciones = await resAtenciones.json();
 
                 mostrarStatus(false);
 
-                if (niñoEncontrado) {
-                    renderizarResultado(niñoEncontrado);
+                // Validamos si la respuesta trajo información o error de no encontrado
+                if (dataAtenciones && !dataAtenciones.error) {
+                    renderizarResultado(dataAtenciones);
                 } else {
                     // Configuración automática del texto predefinido para WhatsApp
                     const mensajeWA = encodeURIComponent(`Hola Lic. Carmen, buenas tardes. Consulté el DNI ${dniBuscado} en la Libreta Digital CRED y me sale que aún no está en el Padrón de Castillo Grande. Por favor, me podría apoyar con el registro?`);
